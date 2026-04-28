@@ -1,0 +1,459 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model UsuarioSupervisor {
+  id     String   @id @default(uuid())
+  nombre String   @db.VarChar(100)
+  correo String   @unique @db.VarChar(100)
+  contra String   @db.VarChar(255)
+  rol    String   @db.VarChar(20)
+  activo Boolean  @default(true)
+  fCre   DateTime @default(now())
+  fMod   DateTime @updatedAt
+
+  @@map("usuarios_supervisor")
+}
+
+model UsuarioDirector {
+  id     String   @id @default(uuid())
+  idEsc  String
+  nombre String   @db.VarChar(100)
+  correo String   @unique @db.VarChar(100)
+  contra String   @db.VarChar(255)
+  activo Boolean  @default(true)
+  fCre   DateTime @default(now())
+  fMod   DateTime @updatedAt
+
+  escuela Escuela @relation(fields: [idEsc], references: [id])
+
+  @@map("usuarios_director")
+}
+
+model Escuela {
+  id           String   @id @default(uuid())
+  nombre       String   @db.VarChar(100)
+  clave        String   @unique @db.VarChar(10)
+  zonaEscolar  String   @db.VarChar(5)
+  nivel        String   @db.VarChar(20)
+  numTel       String?  @db.VarChar(10)
+  correo       String?  @db.VarChar(50)
+  domicilio    String?  @db.VarChar(255)
+  localidad    String?  @db.VarChar(50)
+  municipio    String?  @db.VarChar(50)
+  estado       String?  @db.VarChar(50)
+  codigoPostal String?  @db.VarChar(5)
+  activo       Boolean  @default(true)
+  fCre         DateTime @default(now())
+  fMod         DateTime @updatedAt
+
+  directores UsuarioDirector[]
+  ciclos     Ciclo[]
+  turnos     Turno[]
+  grupos     Grupo[]
+  empleados  Empleado[]
+  plazas     Plaza[]
+
+  @@map("escuelas")
+}
+
+model Ciclo {
+  id      String   @id @default(uuid())
+  idPlan  String
+  idEsc   String
+  nombre  String   @db.VarChar(20)
+  fInicio DateTime @db.Date
+  fFin    DateTime @db.Date
+  activo  Boolean  @default(false)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  plan         PlanEstudios       @relation(fields: [idPlan], references: [id])
+  escuela      Escuela            @relation(fields: [idEsc], references: [id])
+  estadisticas EstadisticaAlumnos[]
+  padrones     Padron[]
+
+  @@unique([nombre, idEsc])
+  @@map("ciclos")
+}
+
+model Turno {
+  id      String   @id @default(uuid())
+  idEsc   String
+  nombre  String   @db.VarChar(25)
+  desc    String?  @db.Text
+  hInicio String   @db.VarChar(5)
+  hFin    String   @db.VarChar(5)
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  escuela Escuela @relation(fields: [idEsc], references: [id])
+  grupos  Grupo[]
+
+  @@map("turnos")
+}
+
+model PlanEstudios {
+  id      String   @id @default(uuid())
+  nombre  String   @db.VarChar(20)
+  desc    String?  @db.Text
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  grados   Grado[]
+  materias Materia[]
+  ciclos   Ciclo[]
+
+  @@map("plan_estudios")
+}
+
+model Grado {
+  id      String   @id @default(uuid())
+  idPlan  String
+  nombre  String   @db.VarChar(25)
+  numero  Int
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  plan         PlanEstudios   @relation(fields: [idPlan], references: [id])
+  grupos       Grupo[]
+  materiaGrado MateriaGrado[]
+
+  @@unique([numero, idPlan])
+  @@map("grados")
+}
+
+model Materia {
+  id      String   @id @default(uuid())
+  idPlan  String
+  nombre  String   @db.VarChar(100)
+  desc    String?  @db.Text
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  plan         PlanEstudios   @relation(fields: [idPlan], references: [id])
+  materiaGrado MateriaGrado[]
+  plazas       Plaza[]
+  horarioSlots HorarioSlot[]
+
+  @@map("materias")
+}
+
+model MateriaGrado {
+  id        String   @id @default(uuid())
+  idMateria String
+  idGrado   String
+  horasSem  Int
+  fCre      DateTime @default(now())
+  fMod      DateTime @updatedAt
+
+  materia Materia @relation(fields: [idMateria], references: [id])
+  grado   Grado   @relation(fields: [idGrado], references: [id])
+
+  @@unique([idMateria, idGrado])
+  @@map("materia_grado")
+}
+
+model Grupo {
+  id      String   @id @default(uuid())
+  idEsc   String
+  idGrado String
+  idTurno String
+  nombre  String   @db.VarChar(5)
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  escuela      Escuela            @relation(fields: [idEsc], references: [id])
+  grado        Grado              @relation(fields: [idGrado], references: [id])
+  turno        Turno              @relation(fields: [idTurno], references: [id])
+  plazaGrupos  PlazaGrupo[]
+  horarioSlots HorarioSlot[]
+  estadisticas EstadisticaAlumnos[]
+
+  @@unique([nombre, idGrado, idTurno, idEsc])
+  @@map("grupos")
+}
+
+model Persona {
+  id      String   @id @default(uuid())
+  nombre  String   @db.VarChar(50)
+  appP    String   @db.VarChar(50)
+  appM    String?  @db.VarChar(50)
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  direccion PersonaDirec?
+  contacto  PersonaContact?
+  empleado  Empleado?
+
+  @@map("personas")
+}
+
+model PersonaDirec {
+  id        String   @id @default(uuid())
+  idPersona String   @unique
+  calle1    String?  @db.VarChar(100)
+  calle2    String?  @db.VarChar(100)
+  refer     String?  @db.Text
+  colonia   String?  @db.VarChar(100)
+  codPost   String?  @db.VarChar(5)
+  ciudad    String?  @db.VarChar(50)
+  estado    String?  @db.VarChar(50)
+  pais      String?  @db.VarChar(50)
+  activo    Boolean  @default(true)
+  fCre      DateTime @default(now())
+  fMod      DateTime @updatedAt
+
+  persona Persona @relation(fields: [idPersona], references: [id])
+
+  @@map("persona_direc")
+}
+
+model PersonaContact {
+  id        String   @id @default(uuid())
+  idPersona String   @unique
+  numTel1   String?  @db.VarChar(10)
+  numTel2   String?  @db.VarChar(10)
+  correo    String?  @db.VarChar(50)
+  activo    Boolean  @default(true)
+  fCre      DateTime @default(now())
+  fMod      DateTime @updatedAt
+
+  persona Persona @relation(fields: [idPersona], references: [id])
+
+  @@map("persona_contact")
+}
+
+model Empleado {
+  id          String   @id @default(uuid())
+  idPersona   String   @unique
+  idEsc       String
+  numControl  String?  @db.VarChar(20)
+  rfc         String   @unique @db.VarChar(13)
+  curp        String   @unique @db.VarChar(18)
+  lugarNac    String?  @db.VarChar(150)
+  estadoCivil String?  @db.VarChar(20)
+  fIngreso    DateTime @db.Date
+  activo      Boolean  @default(true)
+  fCre        DateTime @default(now())
+  fMod        DateTime @updatedAt
+
+  persona           Persona          @relation(fields: [idPersona], references: [id])
+  escuela           Escuela          @relation(fields: [idEsc], references: [id])
+  preparacion       PreparacionProf?
+  roles             EmpleadoRol[]
+  plazas            Plaza[]
+  trabajoExterno    TrabajoExterno[]
+  horarioSlots      HorarioSlot[]
+  coberturasTitular Cobertura[]      @relation("titular")
+  coberturasSuple   Cobertura[]      @relation("suplente")
+
+  @@map("empleados")
+}
+
+model Cobertura {
+  id                String    @id @default(uuid())
+  idEmpleadoTitular String
+  idEmpleadoCubre   String
+  numControlTemp    String    @db.VarChar(20)
+  fInicio           DateTime  @db.Date
+  fFin              DateTime? @db.Date
+  motivo            String?   @db.Text
+  activo            Boolean   @default(true)
+  fCre              DateTime  @default(now())
+  fMod              DateTime  @updatedAt
+
+  titular  Empleado @relation("titular",  fields: [idEmpleadoTitular], references: [id])
+  suplente Empleado @relation("suplente", fields: [idEmpleadoCubre],   references: [id])
+
+  @@index([idEmpleadoCubre, activo])
+  @@map("coberturas")
+}
+
+model RolEmpleado {
+  id      String   @id @default(uuid())
+  nombre  String   @unique @db.VarChar(25)
+  desc    String?  @db.Text
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  empleados EmpleadoRol[]
+
+  @@map("roles_empleado")
+}
+
+model EmpleadoRol {
+  id         String    @id @default(uuid())
+  idEmpleado String
+  idRol      String
+  fInicio    DateTime  @db.Date
+  fFin       DateTime? @db.Date
+  activo     Boolean   @default(true)
+  fCre       DateTime  @default(now())
+  fMod       DateTime  @updatedAt
+
+  empleado Empleado    @relation(fields: [idEmpleado], references: [id])
+  rol      RolEmpleado @relation(fields: [idRol],      references: [id])
+
+  @@unique([idEmpleado, idRol, fInicio])
+  @@map("empleado_rol")
+}
+
+model PreparacionProf {
+  id             String   @id @default(uuid())
+  idEmpleado     String   @unique
+  estudiosPprof  String?  @db.VarChar(200)
+  escuelaRealiz  String?  @db.VarChar(200)
+  tipoEstudio    String?  @db.VarChar(20)
+  ultimoGrado    String?  @db.VarChar(100)
+  institucion    String?  @db.VarChar(200)
+  especialidades String?  @db.Text
+  activo         Boolean  @default(true)
+  fCre           DateTime @default(now())
+  fMod           DateTime @updatedAt
+
+  empleado Empleado @relation(fields: [idEmpleado], references: [id])
+
+  @@map("preparacion_prof")
+}
+
+model Nombramiento {
+  id      String   @id @default(uuid())
+  nombre  String   @unique @db.VarChar(100)
+  activo  Boolean  @default(true)
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  plazas Plaza[]
+
+  @@map("nombramientos")
+}
+
+model Plaza {
+  id             String   @id @default(uuid())
+  idEmpleado     String
+  idNombramiento String
+  idMateria      String?
+  idEsc          String
+  codigoPlaza    String   @db.VarChar(30)
+  horasClase     Int?
+  horasDescarga  Int?
+  horasFortalec  Int?
+  funcDescarga   String?  @db.Text
+  evaluado       String?  @db.VarChar(255)
+  observaciones  String?  @db.Text
+  activo         Boolean  @default(true)
+  fCre           DateTime @default(now())
+  fMod           DateTime @updatedAt
+
+  empleado     Empleado     @relation(fields: [idEmpleado],     references: [id])
+  nombramiento Nombramiento @relation(fields: [idNombramiento], references: [id])
+  materia      Materia?     @relation(fields: [idMateria],      references: [id])
+  escuela      Escuela      @relation(fields: [idEsc],          references: [id])
+  grupos       PlazaGrupo[]
+
+  @@map("plazas")
+}
+
+model PlazaGrupo {
+  id      String   @id @default(uuid())
+  idPlaza String
+  idGrupo String
+  fCre    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  plaza Plaza @relation(fields: [idPlaza], references: [id])
+  grupo Grupo @relation(fields: [idGrupo], references: [id])
+
+  @@unique([idPlaza, idGrupo])
+  @@map("plaza_grupo")
+}
+
+model TrabajoExterno {
+  id          String   @id @default(uuid())
+  idEmpleado  String
+  institucion String   @db.VarChar(200)
+  horas       Int
+  activo      Boolean  @default(true)
+  fCre        DateTime @default(now())
+  fMod        DateTime @updatedAt
+
+  empleado Empleado @relation(fields: [idEmpleado], references: [id])
+
+  @@map("trabajo_externo")
+}
+
+model HorarioSlot {
+  id         String   @id @default(uuid())
+  idEmpleado String?
+  idGrupo    String?
+  idMateria  String?
+  diaSemana  String   @db.VarChar(10)
+  hInicio    String   @db.VarChar(5)
+  hFin       String   @db.VarChar(5)
+  activo     Boolean  @default(true)
+  fCre       DateTime @default(now())
+  fMod       DateTime @updatedAt
+
+  empleado Empleado? @relation(fields: [idEmpleado], references: [id])
+  grupo    Grupo?    @relation(fields: [idGrupo],    references: [id])
+  materia  Materia?  @relation(fields: [idMateria],  references: [id])
+
+  @@map("horario_slots")
+}
+
+model EstadisticaAlumnos {
+  id      String   @id @default(uuid())
+  idCiclo String
+  idGrupo String
+
+  inscH Int @default(0)
+  inscM Int @default(0)
+
+  altasH Int @default(0)
+  altasM Int @default(0)
+
+  bajasH Int @default(0)
+  bajasM Int @default(0)
+
+  aprobTodosH  Int?
+  aprobTodosM  Int?
+  reprobH      Int?
+  reprobM      Int?
+  repetidoresH Int?
+  repetidoresM Int?
+
+  fCre DateTime @default(now())
+  fMod DateTime @updatedAt
+
+  ciclo Ciclo @relation(fields: [idCiclo], references: [id])
+  grupo Grupo @relation(fields: [idGrupo], references: [id])
+
+  @@unique([idCiclo, idGrupo])
+  @@map("estadistica_alumnos")
+}
+
+model Padron {
+  id      String   @id @default(uuid())
+  idCiclo String
+  idEsc   String
+  status  String   @default("borrador") @db.VarChar(20)
+  fGen    DateTime @default(now())
+  fMod    DateTime @updatedAt
+
+  ciclo Ciclo @relation(fields: [idCiclo], references: [id])
+
+  @@map("padrones")
+}
