@@ -13,7 +13,8 @@ import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from 
 import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } from '../modules/empleado/empleado.schema';
 import { CreateCoberturaSchema, CoberturaResponseSchema }       from '../modules/cobertura/cobertura.schema';
 import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema }       from '../modules/plaza/plaza.schema';
-import { CreateHorarioSlotSchema, HorarioSlotResponseSchema }               from '../modules/horario/horario.schema';
+import { CreateHorarioSlotSchema, HorarioSlotResponseSchema }                   from '../modules/horario/horario.schema';
+import { UpdateEstadisticaSchema, EstadisticaResponseSchema }                   from '../modules/estadistica/estadistica.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -171,6 +172,40 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Estadisticas
+registry.registerPath({
+  method:   'get',
+  path:     '/director/estadisticas',
+  tags:     ['Estadisticas'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de estadisticas', content: { 'application/json': { schema: EstadisticaResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/estadisticas/{id}',
+  tags:     ['Estadisticas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Estadistica encontrada', content: { 'application/json': { schema: EstadisticaResponseSchema } } },
+    404: { description: 'Estadistica no encontrada' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/estadisticas/{id}',
+  tags:     ['Estadisticas'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateEstadisticaSchema } } },
+  },
+  responses: {
+    200: { description: 'Estadistica actualizada', content: { 'application/json': { schema: EstadisticaResponseSchema } } },
+    404: { description: 'Estadistica no encontrada' },
   },
 });
 
