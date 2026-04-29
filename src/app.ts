@@ -17,6 +17,7 @@ import cicloRoutes        from './modules/ciclo/ciclo.routes';
 import turnoRoutes        from './modules/turno/turno.routes';
 import grupoRoutes        from './modules/grupo/grupo.routes';
 import empleadoRoutes     from './modules/empleado/empleado.routes';
+import coberturaRoutes    from './modules/cobertura/cobertura.routes';
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/director/ciclos',     cicloRoutes);
 app.use('/api/director/turnos',     turnoRoutes);
 app.use('/api/director/grupos',     grupoRoutes);
 app.use('/api/director/empleados',  empleadoRoutes);
+app.use('/api/director/coberturas', coberturaRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

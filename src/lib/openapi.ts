@@ -11,6 +11,7 @@ import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../mo
 import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
 import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from '../modules/grupo/grupo.schema';
 import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } from '../modules/empleado/empleado.schema';
+import { CreateCoberturaSchema, CoberturaResponseSchema }                     from '../modules/cobertura/cobertura.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -168,6 +169,49 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Coberturas
+registry.registerPath({
+  method:   'get',
+  path:     '/director/coberturas',
+  tags:     ['Coberturas'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de coberturas', content: { 'application/json': { schema: CoberturaResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/coberturas/{id}',
+  tags:     ['Coberturas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Cobertura encontrada', content: { 'application/json': { schema: CoberturaResponseSchema } } },
+    404: { description: 'Cobertura no encontrada' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/coberturas',
+  tags:     ['Coberturas'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateCoberturaSchema } } } },
+  responses: {
+    201: { description: 'Cobertura abierta',   content: { 'application/json': { schema: CoberturaResponseSchema } } },
+    409: { description: 'Suplente ya tiene cobertura activa' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/coberturas/{id}/cerrar',
+  tags:     ['Coberturas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Cobertura cerrada', content: { 'application/json': { schema: CoberturaResponseSchema } } },
+    404: { description: 'Cobertura no encontrada' },
+    409: { description: 'La cobertura ya esta cerrada' },
   },
 });
 
