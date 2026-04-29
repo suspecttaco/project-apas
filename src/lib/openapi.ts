@@ -11,7 +11,8 @@ import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../mo
 import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
 import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from '../modules/grupo/grupo.schema';
 import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } from '../modules/empleado/empleado.schema';
-import { CreateCoberturaSchema, CoberturaResponseSchema }                     from '../modules/cobertura/cobertura.schema';
+import { CreateCoberturaSchema, CoberturaResponseSchema }       from '../modules/cobertura/cobertura.schema';
+import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema } from '../modules/plaza/plaza.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -169,6 +170,62 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Plazas
+registry.registerPath({
+  method:   'get',
+  path:     '/director/plazas',
+  tags:     ['Plazas'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de plazas', content: { 'application/json': { schema: PlazaResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/plazas/{id}',
+  tags:     ['Plazas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Plaza encontrada', content: { 'application/json': { schema: PlazaResponseSchema } } },
+    404: { description: 'Plaza no encontrada' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/plazas',
+  tags:     ['Plazas'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreatePlazaSchema } } } },
+  responses: {
+    201: { description: 'Plaza creada',    content: { 'application/json': { schema: PlazaResponseSchema } } },
+    409: { description: 'Codigo de plaza duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/plazas/{id}',
+  tags:     ['Plazas'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdatePlazaSchema } } },
+  },
+  responses: {
+    200: { description: 'Plaza actualizada', content: { 'application/json': { schema: PlazaResponseSchema } } },
+    404: { description: 'Plaza no encontrada' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/plazas/{id}',
+  tags:     ['Plazas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Plaza eliminada' },
+    404: { description: 'Plaza no encontrada' },
   },
 });
 
