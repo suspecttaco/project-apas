@@ -8,6 +8,7 @@ import { MateriaResponseSchema }       from '../modules/materia/materia.schema';
 import { NombramientoResponseSchema }  from '../modules/nombramiento/nombramiento.schema';
 import { RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
 import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../modules/ciclo/ciclo.schema';
+import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -165,6 +166,62 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Turnos
+registry.registerPath({
+  method:   'get',
+  path:     '/director/turnos',
+  tags:     ['Turnos'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de turnos', content: { 'application/json': { schema: TurnoResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/turnos/{id}',
+  tags:     ['Turnos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Turno encontrado', content: { 'application/json': { schema: TurnoResponseSchema } } },
+    404: { description: 'Turno no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/turnos',
+  tags:     ['Turnos'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateTurnoSchema } } } },
+  responses: {
+    201: { description: 'Turno creado',    content: { 'application/json': { schema: TurnoResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/turnos/{id}',
+  tags:     ['Turnos'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateTurnoSchema } } },
+  },
+  responses: {
+    200: { description: 'Turno actualizado', content: { 'application/json': { schema: TurnoResponseSchema } } },
+    404: { description: 'Turno no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/turnos/{id}',
+  tags:     ['Turnos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Turno eliminado' },
+    404: { description: 'Turno no encontrado' },
   },
 });
 
