@@ -12,7 +12,8 @@ import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../mo
 import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from '../modules/grupo/grupo.schema';
 import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } from '../modules/empleado/empleado.schema';
 import { CreateCoberturaSchema, CoberturaResponseSchema }       from '../modules/cobertura/cobertura.schema';
-import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema } from '../modules/plaza/plaza.schema';
+import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema }       from '../modules/plaza/plaza.schema';
+import { CreateHorarioSlotSchema, HorarioSlotResponseSchema }               from '../modules/horario/horario.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -170,6 +171,52 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Horarios
+registry.registerPath({
+  method:   'get',
+  path:     '/director/horarios/empleado/{idEmpleado}',
+  tags:     ['Horarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ idEmpleado: z.string() }) },
+  responses: {
+    200: { description: 'Horario del empleado', content: { 'application/json': { schema: HorarioSlotResponseSchema } } },
+    404: { description: 'Empleado no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/horarios/grupo/{idGrupo}',
+  tags:     ['Horarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ idGrupo: z.string() }) },
+  responses: {
+    200: { description: 'Horario del grupo', content: { 'application/json': { schema: HorarioSlotResponseSchema } } },
+    404: { description: 'Grupo no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/horarios',
+  tags:     ['Horarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateHorarioSlotSchema } } } },
+  responses: {
+    201: { description: 'Slot creado',   content: { 'application/json': { schema: HorarioSlotResponseSchema } } },
+    409: { description: 'Slot duplicado en ese grupo, dia y hora' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/horarios/{id}',
+  tags:     ['Horarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Slot eliminado' },
+    404: { description: 'Slot no encontrado' },
   },
 });
 

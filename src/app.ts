@@ -19,6 +19,7 @@ import grupoRoutes        from './modules/grupo/grupo.routes';
 import empleadoRoutes     from './modules/empleado/empleado.routes';
 import coberturaRoutes    from './modules/cobertura/cobertura.routes';
 import plazaRoutes        from './modules/plaza/plaza.routes';
+import horarioRoutes      from './modules/horario/horario.routes';
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api/director/grupos',     grupoRoutes);
 app.use('/api/director/empleados',  empleadoRoutes);
 app.use('/api/director/coberturas', coberturaRoutes);
 app.use('/api/director/plazas',    plazaRoutes);
+app.use('/api/director/horarios',  horarioRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
