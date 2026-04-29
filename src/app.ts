@@ -13,6 +13,7 @@ import gradoRoutes        from './modules/grado/grado.routes';
 import materiaRoutes      from './modules/materia/materia.routes';
 import nombramientoRoutes from './modules/nombramiento/nombramiento.routes';
 import rolEmpleadoRoutes  from './modules/rol-empleado/rol-empleado.routes';
+import cicloRoutes        from './modules/ciclo/ciclo.routes';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/grados',              gradoRoutes);
 app.use('/api/materias',            materiaRoutes);
 app.use('/api/nombramientos',       nombramientoRoutes);
 app.use('/api/roles-empleado',      rolEmpleadoRoutes);
+app.use('/api/director/ciclos',     cicloRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

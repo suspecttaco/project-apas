@@ -7,6 +7,7 @@ import { GradoResponseSchema }        from '../modules/grado/grado.schema';
 import { MateriaResponseSchema }       from '../modules/materia/materia.schema';
 import { NombramientoResponseSchema }  from '../modules/nombramiento/nombramiento.schema';
 import { RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
+import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../modules/ciclo/ciclo.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -96,6 +97,74 @@ registry.registerPath({
   responses: {
     204: { description: 'Escuela eliminada' },
     404: { description: 'Escuela no encontrada' },
+  },
+});
+
+// Ciclos
+registry.registerPath({
+  method:   'get',
+  path:     '/director/ciclos',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de ciclos', content: { 'application/json': { schema: CicloResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/ciclos/{id}',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Ciclo encontrado', content: { 'application/json': { schema: CicloResponseSchema } } },
+    404: { description: 'Ciclo no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/ciclos',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateCicloSchema } } } },
+  responses: {
+    201: { description: 'Ciclo creado',    content: { 'application/json': { schema: CicloResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/ciclos/{id}',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateCicloSchema } } },
+  },
+  responses: {
+    200: { description: 'Ciclo actualizado', content: { 'application/json': { schema: CicloResponseSchema } } },
+    404: { description: 'Ciclo no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/ciclos/{id}',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Ciclo eliminado' },
+    404: { description: 'Ciclo no encontrado' },
+    409: { description: 'No se puede eliminar el ciclo activo' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/ciclos/{id}/activar',
+  tags:     ['Ciclos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
+    404: { description: 'Ciclo no encontrado' },
   },
 });
 
