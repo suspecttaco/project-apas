@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { LoginSupervisorSchema, LoginDirectorSchema, TokenResponseSchema } from '../modules/auth/auth.schema';
 import { CreateEscuelaSchema, UpdateEscuelaSchema, EscuelaResponseSchema } from '../modules/escuela/escuela.schema';
@@ -16,7 +17,7 @@ registry.registerPath({
   tags:    ['Auth'],
   request: { body: { content: { 'application/json': { schema: LoginSupervisorSchema } } } },
   responses: {
-    200: { description: 'Login exitoso', content: { 'application/json': { schema: TokenResponseSchema } } },
+    200: { description: 'Login exitoso',          content: { 'application/json': { schema: TokenResponseSchema } } },
     401: { description: 'Credenciales invalidas' },
   },
 });
@@ -27,7 +28,7 @@ registry.registerPath({
   tags:    ['Auth'],
   request: { body: { content: { 'application/json': { schema: LoginDirectorSchema } } } },
   responses: {
-    200: { description: 'Login exitoso', content: { 'application/json': { schema: TokenResponseSchema } } },
+    200: { description: 'Login exitoso',          content: { 'application/json': { schema: TokenResponseSchema } } },
     401: { description: 'Credenciales invalidas' },
   },
 });
@@ -43,13 +44,25 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method:   'get',
+  path:     '/supervisor/escuelas/{id}',
+  tags:     ['Escuelas'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    200: { description: 'Escuela encontrada', content: { 'application/json': { schema: EscuelaResponseSchema } } },
+    404: { description: 'Escuela no encontrada' },
+  },
+});
+
+registry.registerPath({
   method:   'post',
   path:     '/supervisor/escuelas',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateEscuelaSchema } } } },
   responses: {
-    201: { description: 'Escuela creada', content: { 'application/json': { schema: EscuelaResponseSchema } } },
+    201: { description: 'Escuela creada',    content: { 'application/json': { schema: EscuelaResponseSchema } } },
     409: { description: 'Clave duplicada' },
   },
 });
@@ -60,11 +73,11 @@ registry.registerPath({
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  {
-    params: { id: { in: 'path', required: true, schema: { type: 'string' } } } as any,
+    params: z.object({ id: z.string().uuid() }),
     body:   { content: { 'application/json': { schema: UpdateEscuelaSchema } } },
   },
   responses: {
-    200: { description: 'Escuela actualizada', content: { 'application/json': { schema: EscuelaResponseSchema } } },
+    200: { description: 'Escuela actualizada',   content: { 'application/json': { schema: EscuelaResponseSchema } } },
     404: { description: 'Escuela no encontrada' },
   },
 });
@@ -74,9 +87,7 @@ registry.registerPath({
   path:     '/supervisor/escuelas/{id}',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
-  request:  {
-    params: { id: { in: 'path', required: true, schema: { type: 'string' } } } as any,
-  },
+  request:  { params: z.object({ id: z.string().uuid() }) },
   responses: {
     204: { description: 'Escuela eliminada' },
     404: { description: 'Escuela no encontrada' },
