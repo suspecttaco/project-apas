@@ -9,7 +9,8 @@ import { NombramientoResponseSchema }  from '../modules/nombramiento/nombramient
 import { RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
 import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../modules/ciclo/ciclo.schema';
 import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
-import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema } from '../modules/grupo/grupo.schema';
+import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from '../modules/grupo/grupo.schema';
+import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } from '../modules/empleado/empleado.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -167,6 +168,62 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Empleados
+registry.registerPath({
+  method:   'get',
+  path:     '/director/empleados',
+  tags:     ['Empleados'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de empleados', content: { 'application/json': { schema: EmpleadoResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/empleados/{id}',
+  tags:     ['Empleados'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Empleado encontrado', content: { 'application/json': { schema: EmpleadoResponseSchema } } },
+    404: { description: 'Empleado no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/empleados',
+  tags:     ['Empleados'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateEmpleadoSchema } } } },
+  responses: {
+    201: { description: 'Empleado creado',    content: { 'application/json': { schema: EmpleadoResponseSchema } } },
+    409: { description: 'RFC o CURP duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/empleados/{id}',
+  tags:     ['Empleados'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateEmpleadoSchema } } },
+  },
+  responses: {
+    200: { description: 'Empleado actualizado', content: { 'application/json': { schema: EmpleadoResponseSchema } } },
+    404: { description: 'Empleado no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/empleados/{id}',
+  tags:     ['Empleados'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Empleado eliminado' },
+    404: { description: 'Empleado no encontrado' },
   },
 });
 
