@@ -6,7 +6,8 @@ import swaggerUi from 'swagger-ui-express';
 import { generateOpenApiSpec } from './lib/openapi';
 import { errorMiddleware } from './middleware/error.middleware';
 
-import authRouter from './modules/auth/auth.routes';
+import authRoutes from './modules/auth/auth.routes';
+import escuelaRoutes from './modules/escuela/escuela.routes';
 
 const app = express();
 
@@ -17,7 +18,8 @@ app.use(express.json());
 const spec = generateOpenApiSpec();
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec));
 
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/supervisor/escuelas', escuelaRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
