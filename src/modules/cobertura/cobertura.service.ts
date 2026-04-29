@@ -51,7 +51,7 @@ export class CoberturaService {
     if (coberturaActiva) throw new ConflictError('El suplente ya tiene una cobertura activa');
 
     const conteo = await db.cobertura.count({
-      where: { idEmpleadoTitular: dto.idEmpleadoTitular },
+      where: { idEmpleadoTitular: dto.idEmpleadoTitular, fFin: null, activo: true },
     });
     const numControlTemp = `${titular.numControl}.${conteo + 1}`;
 
