@@ -9,6 +9,7 @@ import { NombramientoResponseSchema }  from '../modules/nombramiento/nombramient
 import { RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
 import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../modules/ciclo/ciclo.schema';
 import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
+import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema } from '../modules/grupo/grupo.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -166,6 +167,62 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Grupos
+registry.registerPath({
+  method:   'get',
+  path:     '/director/grupos',
+  tags:     ['Grupos'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de grupos', content: { 'application/json': { schema: GrupoResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/grupos/{id}',
+  tags:     ['Grupos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Grupo encontrado', content: { 'application/json': { schema: GrupoResponseSchema } } },
+    404: { description: 'Grupo no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/director/grupos',
+  tags:     ['Grupos'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateGrupoSchema } } } },
+  responses: {
+    201: { description: 'Grupo creado',    content: { 'application/json': { schema: GrupoResponseSchema } } },
+    409: { description: 'Grupo duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/director/grupos/{id}',
+  tags:     ['Grupos'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateGrupoSchema } } },
+  },
+  responses: {
+    200: { description: 'Grupo actualizado', content: { 'application/json': { schema: GrupoResponseSchema } } },
+    404: { description: 'Grupo no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/director/grupos/{id}',
+  tags:     ['Grupos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Grupo eliminado' },
+    404: { description: 'Grupo no encontrado' },
   },
 });
 
