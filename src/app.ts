@@ -21,6 +21,7 @@ import coberturaRoutes    from './modules/cobertura/cobertura.routes';
 import plazaRoutes        from './modules/plaza/plaza.routes';
 import horarioRoutes      from './modules/horario/horario.routes';
 import estadisticaRoutes  from './modules/estadistica/estadistica.routes';
+import padronRoutes       from './modules/padron/padron.routes';
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/director/coberturas', coberturaRoutes);
 app.use('/api/director/plazas',    plazaRoutes);
 app.use('/api/director/horarios',      horarioRoutes);
 app.use('/api/director/estadisticas',  estadisticaRoutes);
+app.use('/api/director/padron',        padronRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

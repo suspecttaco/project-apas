@@ -14,7 +14,8 @@ import { CreateEmpleadoSchema, UpdateEmpleadoSchema, EmpleadoResponseSchema } fr
 import { CreateCoberturaSchema, CoberturaResponseSchema }       from '../modules/cobertura/cobertura.schema';
 import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema }       from '../modules/plaza/plaza.schema';
 import { CreateHorarioSlotSchema, HorarioSlotResponseSchema }                   from '../modules/horario/horario.schema';
-import { UpdateEstadisticaSchema, EstadisticaResponseSchema }                   from '../modules/estadistica/estadistica.schema';
+import { UpdateEstadisticaSchema, EstadisticaResponseSchema }   from '../modules/estadistica/estadistica.schema';
+import { GenerarPadronSchema, PadronResponseSchema }           from '../modules/padron/padron.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -172,6 +173,28 @@ registry.registerPath({
   responses: {
     200: { description: 'Ciclo activado', content: { 'application/json': { schema: CicloResponseSchema } } },
     404: { description: 'Ciclo no encontrado' },
+  },
+});
+
+// Padron
+registry.registerPath({
+  method:   'post',
+  path:     '/director/padron/generar',
+  tags:     ['Padron'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: GenerarPadronSchema } } } },
+  responses: {
+    200: { description: 'PDF del padron generado (application/pdf)' },
+    404: { description: 'Ciclo o escuela no encontrados' },
+  },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/director/padron/historial',
+  tags:     ['Padron'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: { description: 'Historial de padrones generados', content: { 'application/json': { schema: PadronResponseSchema } } },
   },
 });
 
