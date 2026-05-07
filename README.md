@@ -1,4 +1,4 @@
-# APAC — Academic Personnel Administration and Control
+# APAS — Academic Personnel Administration System
 
 Sistema backend para la generación del **Padrón de Estructura Ocupacional Intermedia** de la SEPyC Sinaloa. Desarrollado como proyecto de tesis universitaria.
 
