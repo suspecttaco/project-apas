@@ -99,9 +99,10 @@ export class PadronService {
       const page = await browser.newPage();
       await page.setContent(html, { waitUntil: 'networkidle0' });
       const pdf = await page.pdf({
-        format:          'Letter',
+        format:          'Tabloid',
+        landscape:       true,
         printBackground: true,
-        margin:          { top: '0.5cm', bottom: '0.5cm', left: '0.5cm', right: '0.5cm' },
+        margin: { top: '0', bottom: '0', left: '0', right: '0' },
       });
       return Buffer.from(pdf);
     } finally {

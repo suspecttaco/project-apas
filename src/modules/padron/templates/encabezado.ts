@@ -1,14 +1,27 @@
 import { EscuelaConTurnos, CicloConPlan } from './tipos';
 
-export function encabezado(escuela: EscuelaConTurnos, ciclo: CicloConPlan): string {
+export function encabezado(escuela: EscuelaConTurnos, ciclo: CicloConPlan, titulo?: string): string {
+  const turnos = escuela.turnos.map(t => t.nombre).join(' / ') || '—';
+
   return `
     <div class="encabezado">
-      <div class="logo">SEPyC</div>
-      <div class="info-esc">
-        <div class="titulo">Dirección de Educación ${escuela.nivel}</div>
-        <div>Ciclo Escolar: <strong>${ciclo.nombre}</strong> &nbsp;|&nbsp; ${escuela.nombre} &nbsp;|&nbsp; Clave: ${escuela.clave}</div>
-        <div>Domicilio: ${escuela.domicilio ?? ''} &nbsp;|&nbsp; Localidad: ${escuela.localidad ?? ''} &nbsp;|&nbsp; Municipio: ${escuela.municipio ?? ''}</div>
-        <div>Zona Escolar: ${escuela.zonaEscolar} &nbsp;|&nbsp; Correo: ${escuela.correo ?? ''} &nbsp;|&nbsp; Tel: ${escuela.numTel ?? ''}</div>
+      <div class="enc-logo">SEPyC</div>
+      <div class="enc-cuerpo">
+        <div class="enc-titulo">SUBSECRETARÍA DE EDUCACIÓN BÁSICA</div>
+        <div class="enc-subtitulo">DIRECCIÓN DE EDUCACIÓN ${escuela.nivel.toUpperCase()}${titulo ? ` &nbsp;·&nbsp; ${titulo}` : ''}</div>
+        <div class="enc-subtitulo">CICLO ESCOLAR ${ciclo.nombre}</div>
+        <div class="enc-fila">
+          <span class="enc-campo"><span class="enc-label">ESCUELA:</span> ${escuela.nombre}</span>
+          <span class="enc-campo"><span class="enc-label">CLAVE:</span> ${escuela.clave}</span>
+          <span class="enc-campo"><span class="enc-label">TURNO:</span> ${turnos}</span>
+          <span class="enc-campo"><span class="enc-label">TEL:</span> ${escuela.numTel ?? '—'}</span>
+          <span class="enc-campo"><span class="enc-label">CORREO:</span> ${escuela.correo ?? '—'}</span>
+        </div>
+        <div class="enc-fila">
+          <span class="enc-campo"><span class="enc-label">DOMICILIO:</span> ${escuela.domicilio ?? '—'}</span>
+          <span class="enc-campo"><span class="enc-label">LOCALIDAD Y MUNICIPIO:</span> ${escuela.localidad ?? '—'}, ${escuela.municipio ?? '—'}</span>
+          <span class="enc-campo"><span class="enc-label">ZONA ESCOLAR:</span> ${escuela.zonaEscolar}</span>
+        </div>
       </div>
     </div>
   `;
