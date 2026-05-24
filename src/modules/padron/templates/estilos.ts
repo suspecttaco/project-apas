@@ -16,7 +16,7 @@ export const estilos = `
     break-after: avoid;
   }
 
-  /* ── Encabezado ── */
+  /*  Encabezado  */
   .encabezado {
     display: flex;
     align-items: stretch;
@@ -61,7 +61,7 @@ export const estilos = `
   .enc-campo { white-space: nowrap; }
   .enc-label { font-weight: bold; }
 
-  /* ── Títulos de sección ── */
+  /*  Títulos de sección  */
   h2 {
     font-size: 12px;
     text-align: center;
@@ -72,7 +72,7 @@ export const estilos = `
   }
   h3 { font-size: 11px; margin: 6px 0 3px; font-weight: bold; }
 
-  /* ── Tablas ── */
+  /*  Tablas  */
   table { width: 100%; border-collapse: collapse; margin-bottom: 7px; }
   th, td { border: 1px solid #000; padding: 4px 5px; vertical-align: middle; }
   th {
@@ -89,7 +89,7 @@ export const estilos = `
   .label  { font-weight: bold; background-color: #ececec; white-space: nowrap; width: 1%; }
   .nota   { font-size: 9px; font-style: italic; margin-bottom: 4px; }
 
-  /* ── Portada ── */
+  /*  Portada  */
   .portada {
     display: flex;
     flex-direction: column;
@@ -105,7 +105,7 @@ export const estilos = `
   .portada .doc     { font-size: 20px; font-weight: bold; margin-top: 20px; }
   .portada .lugfec  { font-size: 13px; margin-top: 20px; }
 
-  /* ── Pie de firmas ── */
+  /*  Pie de firmas  */
   .pie {
     position: absolute;
     bottom: 10mm;
@@ -120,7 +120,7 @@ export const estilos = `
   .firma-nombre { font-size: 10px; margin-bottom: 2px; }
   .firma-linea  { border-top: 1px solid #000; padding-top: 3px; font-size: 9px; }
 
-  /* ── Utilidades ── */
+  /*  Utilidades  */
   .fila-total { background-color: #e8e8e8; font-weight: bold; }
   small { font-size: 8.5px; }
 `;

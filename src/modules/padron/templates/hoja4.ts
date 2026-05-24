@@ -11,7 +11,7 @@ export function hoja4({ escuela, ciclo, empleados, grupos }: DatosPadron): strin
   }));
   const gruposLabel = gruposPorGrado.map(g => `${g.nombre}s: ${g.count}`).join('  ');
 
-  // ── Distribución alumnos por turno ───────────────────────────────────────
+  //  Distribución alumnos por turno 
   const filasTurno = escuela.turnos.map(turno => {
     const gruposTurno = grupos.filter(g => g.idTurno === turno.id);
     const porGrado = grados.map(grado => {
@@ -33,7 +33,7 @@ export function hoja4({ escuela, ciclo, empleados, grupos }: DatosPadron): strin
 
   const letrasGrupos = [...new Set(grupos.map(g => g.nombre))].sort();
 
-  // ── Relación de personal ─────────────────────────────────────────────────
+  //  Relación de personal 
   const filasPersonal = empleados.map(emp => {
     const nombre          = `${emp.persona.appP} ${emp.persona.appM ?? ''} ${emp.persona.nombre}`.trim();
     const horasNombr      = emp.plazas.reduce((s, p) => s + (p.horasClase ?? 0) + (p.horasDescarga ?? 0) + (p.horasFortalec ?? 0), 0);

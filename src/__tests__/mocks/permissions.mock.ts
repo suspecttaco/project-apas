@@ -23,6 +23,7 @@ const PERMISOS_POR_ROL: Record<string, Set<string>> = {
     'estadisticas:read', 'estadisticas:write',
     'padron:read', 'padron:generate',
     'catalogos:read',
+    'catalogos:write',
   ]),
   [UUID_ROL_SUPERVISOR]: new Set([
     'escuelas:read', 'escuelas:write',
@@ -37,6 +38,7 @@ const PERMISOS_POR_ROL: Record<string, Set<string>> = {
     'estadisticas:read', 'estadisticas:write',
     'padron:read', 'padron:generate',
     'catalogos:read',
+    'catalogos:write',
   ]),
   [UUID_ROL_DIRECTOR]: new Set([
     'empleados:read', 'empleados:write',

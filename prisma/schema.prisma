@@ -149,6 +149,7 @@ model PlanEstudios {
   id      String   @id @default(uuid())
   nombre  String   @db.VarChar(20)
   desc    String?  @db.Text
+  actual  Boolean @default(false)
   activo  Boolean  @default(true)
   fCre    DateTime @default(now())
   fMod    DateTime @updatedAt

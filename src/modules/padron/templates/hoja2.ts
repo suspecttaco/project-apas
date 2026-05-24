@@ -4,14 +4,14 @@ import { pie, fechaLugar } from './pie';
 
 export function hoja2({ escuela, ciclo, empleados, grupos, roles }: DatosPadron): string {
 
-  // ── Tabla A - Existencia de Recursos Humanos ─────────────────────────────
+  //  Tabla A - Existencia de Recursos Humanos 
   const rolesConConteo = roles.map(rol => ({
     nombre: rol.nombre,
     count: empleados.filter(e => e.roles.some(er => er.idRol === rol.id)).length,
   })).filter(r => r.count > 0);
   const totalPersonal = empleados.length;
 
-  // ── Tabla B - Personal Docente por Asignatura ─────────────────────────────
+  //  Tabla B - Personal Docente por Asignatura 
   const docentesPorMateria = ciclo.plan.materias.map(mat => ({
     nombre: mat.nombre,
     count: empleados.filter(e => e.plazas.some(p => p.idMateria === mat.id)).length,
@@ -20,7 +20,7 @@ export function hoja2({ escuela, ciclo, empleados, grupos, roles }: DatosPadron)
     empleados.filter(e => e.plazas.some(p => p.idMateria)).map(e => e.id)
   ).size;
 
-  // ── Tabla C - Movimientos estadísticos ───────────────────────────────────
+  //  Tabla C - Movimientos estadísticos 
   const statsPorGrado = ciclo.plan.grados.map(grado => {
     const gruposGrado = grupos.filter(g => g.idGrado === grado.id);
     const stats = gruposGrado.flatMap(g => g.estadisticas);

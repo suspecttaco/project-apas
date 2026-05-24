@@ -38,6 +38,7 @@ const PERMISOS = [
   { nombre: 'padron:read',        desc: 'Ver historial de padrones' },
   { nombre: 'padron:generate',    desc: 'Generar el padron en PDF' },
   { nombre: 'catalogos:read',     desc: 'Ver catalogos (materias, grados, nombramientos, roles, plan de estudios)' },
+  { nombre: 'catalogos:write', desc: 'Crear, editar y desactivar catalogos' },
 ];
 
 // Definicion de roles y sus permisos
@@ -82,6 +83,7 @@ const ROLES: {
       'padron:read',
       'padron:generate',
       'catalogos:read',
+      'catalogos:write',
     ],
   },
   {
@@ -155,6 +157,7 @@ async function main() {
       data: {
         nombre: 'Plan 2017',
         desc:   'Plan de estudios de educacion secundaria 2017',
+        actual: true,
       },
     });
   }
