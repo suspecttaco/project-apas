@@ -791,42 +791,56 @@ registry.registerPath({
     404: { description: 'Permiso no encontrado' },
   },
 });
-registry.registerPath({
-  method:   'post',
-  path:     '/permisos',
-  tags:     ['Permisos'],
-  security: [{ bearerAuth: [] }],
-  request:  { body: { content: { 'application/json': { schema: CreatePermisoSchema } } } },
-  responses: {
-    201: { description: 'Permiso creado', content: { 'application/json': { schema: PermisoResponseSchema } } },
-    409: { description: 'Nombre duplicado' },
-  },
-});
-registry.registerPath({
-  method:   'put',
-  path:     '/permisos/{id}',
-  tags:     ['Permisos'],
-  security: [{ bearerAuth: [] }],
-  request:  {
-    params: z.object({ id: z.string().uuid() }),
-    body:   { content: { 'application/json': { schema: UpdatePermisoSchema } } },
-  },
-  responses: {
-    200: { description: 'Permiso actualizado', content: { 'application/json': { schema: PermisoResponseSchema } } },
-    404: { description: 'Permiso no encontrado' },
-  },
-});
-registry.registerPath({
-  method:   'delete',
-  path:     '/permisos/{id}',
-  tags:     ['Permisos'],
-  security: [{ bearerAuth: [] }],
-  request:  { params: z.object({ id: z.string().uuid() }) },
-  responses: {
-    204: { description: 'Permiso eliminado' },
-    404: { description: 'Permiso no encontrado' },
-  },
-});
+if (process.env.PERMISOS_CRUD_ENABLED === "true") {
+  registry.registerPath({
+    method: "post",
+    path: "/permisos",
+    tags: ["Permisos"],
+    security: [{ bearerAuth: [] }],
+    request: {
+      body: {
+        content: { "application/json": { schema: CreatePermisoSchema } },
+      },
+    },
+    responses: {
+      201: {
+        description: "Permiso creado",
+        content: { "application/json": { schema: PermisoResponseSchema } },
+      },
+      409: { description: "Nombre duplicado" },
+    },
+  });
+  registry.registerPath({
+    method: "put",
+    path: "/permisos/{id}",
+    tags: ["Permisos"],
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: z.object({ id: z.string().uuid() }),
+      body: {
+        content: { "application/json": { schema: UpdatePermisoSchema } },
+      },
+    },
+    responses: {
+      200: {
+        description: "Permiso actualizado",
+        content: { "application/json": { schema: PermisoResponseSchema } },
+      },
+      404: { description: "Permiso no encontrado" },
+    },
+  });
+  registry.registerPath({
+    method: "delete",
+    path: "/permisos/{id}",
+    tags: ["Permisos"],
+    security: [{ bearerAuth: [] }],
+    request: { params: z.object({ id: z.string().uuid() }) },
+    responses: {
+      204: { description: "Permiso eliminado" },
+      404: { description: "Permiso no encontrado" },
+    },
+  });
+}
 
 export function generateOpenApiSpec() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
