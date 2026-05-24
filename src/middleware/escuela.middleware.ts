@@ -1,15 +1,10 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
 
+// Verifica que el usuario tenga idEsc en el token
+// Usar en rutas que operan sobre una escuela especifica
 export function escuelaMiddleware(req: Request, res: Response, next: NextFunction) {
-    if (req.user.rol !== 'director' || !req.user.idEsc) {
-        return res.status(403).json({ message: 'Acceso restringido: solo personal autorizado'});
-    }
-    next();
-}
-
-export function supervisorMiddleware(req: Request, res: Response, next: NextFunction){
-  if (req.user.rol !== 'supervisor' && req.user.rol !== 'admin') {
-    return res.status(403).json({ message: 'Acceso restringido: solo personal autorizador' });
+  if (!req.user.idEsc) {
+    return res.status(403).json({ message: 'No tienes una escuela asignada' });
   }
   next();
 }

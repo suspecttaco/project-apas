@@ -3,17 +3,10 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC   = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_CICLO = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_GRUPO = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
 
 const statBase = {
   id:           'uuid-stat',
@@ -35,13 +28,13 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/estadisticas', () => {
+describe('GET /api/estadisticas', () => {
 
   it('debe retornar 200 con lista de estadisticas con calculos', async () => {
     mockPrisma.estadisticaAlumnos.findMany.mockResolvedValue([statBase] as any);
 
     const res = await request(app)
-      .get('/api/director/estadisticas')
+      .get('/api/estadisticas')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -52,18 +45,18 @@ describe('GET /api/director/estadisticas', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/estadisticas');
+    const res = await request(app).get('/api/estadisticas');
     expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/director/estadisticas/:id', () => {
+describe('GET /api/estadisticas/:id', () => {
 
   it('debe retornar 200 con la estadistica encontrada', async () => {
     mockPrisma.estadisticaAlumnos.findFirst.mockResolvedValue(statBase as any);
 
     const res = await request(app)
-      .get('/api/director/estadisticas/uuid-stat')
+      .get('/api/estadisticas/uuid-stat')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -74,14 +67,14 @@ describe('GET /api/director/estadisticas/:id', () => {
     mockPrisma.estadisticaAlumnos.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/director/estadisticas/uuid-inexistente')
+      .get('/api/estadisticas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('PUT /api/director/estadisticas/:id', () => {
+describe('PUT /api/estadisticas/:id', () => {
 
   it('debe retornar 200 al actualizar y retornar calculos correctos', async () => {
     mockPrisma.estadisticaAlumnos.findFirst.mockResolvedValue(statBase as any);
@@ -93,7 +86,7 @@ describe('PUT /api/director/estadisticas/:id', () => {
     } as any);
 
     const res = await request(app)
-      .put('/api/director/estadisticas/uuid-stat')
+      .put('/api/estadisticas/uuid-stat')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ inscH: 20, inscM: 18, altasH: 2, altasM: 1, bajasH: 1, bajasM: 0 });
 
@@ -106,7 +99,7 @@ describe('PUT /api/director/estadisticas/:id', () => {
     mockPrisma.estadisticaAlumnos.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/director/estadisticas/uuid-inexistente')
+      .put('/api/estadisticas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ inscH: 20 });
 
@@ -115,7 +108,7 @@ describe('PUT /api/director/estadisticas/:id', () => {
 
   it('debe retornar 400 si los datos son invalidos', async () => {
     const res = await request(app)
-      .put('/api/director/estadisticas/uuid-stat')
+      .put('/api/estadisticas/uuid-stat')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ inscH: -1 });
 

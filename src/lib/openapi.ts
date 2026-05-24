@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { LoginSupervisorSchema, LoginDirectorSchema, TokenResponseSchema } from '../modules/auth/auth.schema';
+import { LoginSchema, TokenResponseSchema } from '../modules/auth/auth.schema';
 import { CreateEscuelaSchema, UpdateEscuelaSchema, EscuelaResponseSchema } from '../modules/escuela/escuela.schema';
 import { PlanEstudiosResponseSchema } from '../modules/plan-estudios/plan-estudios.schema';
 import { GradoResponseSchema }        from '../modules/grado/grado.schema';
@@ -16,6 +16,9 @@ import { CreatePlazaSchema, UpdatePlazaSchema, PlazaResponseSchema }       from 
 import { CreateHorarioSlotSchema, HorarioSlotResponseSchema }                   from '../modules/horario/horario.schema';
 import { UpdateEstadisticaSchema, EstadisticaResponseSchema }   from '../modules/estadistica/estadistica.schema';
 import { GenerarPadronSchema, PadronResponseSchema }           from '../modules/padron/padron.schema';
+import { CreateUsuarioSchema, UpdateUsuarioSchema, UsuarioResponseSchema } from '../modules/usuario/usuario.schema';
+import { CreateRolSchema, UpdateRolSchema, AsignarPermisosSchema, RolResponseSchema } from '../modules/rol/rol.schema';
+import { CreatePermisoSchema, UpdatePermisoSchema, PermisoResponseSchema } from '../modules/permiso/permiso.schema';
 
 export const registry = new OpenAPIRegistry();
 
@@ -27,29 +30,18 @@ registry.registerComponent('securitySchemes', 'bearerAuth', {
 
 registry.registerPath({
   method:  'post',
-  path:    '/auth/supervisor/login',
+  path:    '/auth/login',
   tags:    ['Auth'],
-  request: { body: { content: { 'application/json': { schema: LoginSupervisorSchema } } } },
+  request: { body: { content: { 'application/json': { schema: LoginSchema } } } },
   responses: {
     200: { description: 'Login exitoso',          content: { 'application/json': { schema: TokenResponseSchema } } },
-    401: { description: 'Credenciales invalidas' },
-  },
-});
-
-registry.registerPath({
-  method:  'post',
-  path:    '/auth/director/login',
-  tags:    ['Auth'],
-  request: { body: { content: { 'application/json': { schema: LoginDirectorSchema } } } },
-  responses: {
-    200: { description: 'Login exitoso',          content: { 'application/json': { schema: TokenResponseSchema } } },
-    401: { description: 'Credenciales invalidas' },
+    401: { description: 'Credenciales invalidas o sin escuela asignada' },
   },
 });
 
 registry.registerPath({
   method:   'get',
-  path:     '/supervisor/escuelas',
+  path:     '/escuelas',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   responses: {
@@ -59,7 +51,7 @@ registry.registerPath({
 
 registry.registerPath({
   method:   'get',
-  path:     '/supervisor/escuelas/{id}',
+  path:     '/escuelas/{id}',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string().uuid() }) },
@@ -71,7 +63,7 @@ registry.registerPath({
 
 registry.registerPath({
   method:   'post',
-  path:     '/supervisor/escuelas',
+  path:     '/escuelas',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateEscuelaSchema } } } },
@@ -83,7 +75,7 @@ registry.registerPath({
 
 registry.registerPath({
   method:   'put',
-  path:     '/supervisor/escuelas/{id}',
+  path:     '/escuelas/{id}',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -98,7 +90,7 @@ registry.registerPath({
 
 registry.registerPath({
   method:   'delete',
-  path:     '/supervisor/escuelas/{id}',
+  path:     '/escuelas/{id}',
   tags:     ['Escuelas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string().uuid() }) },
@@ -111,14 +103,14 @@ registry.registerPath({
 // Ciclos
 registry.registerPath({
   method:   'get',
-  path:     '/director/ciclos',
+  path:     '/ciclos',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de ciclos', content: { 'application/json': { schema: CicloResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/ciclos/{id}',
+  path:     '/ciclos/{id}',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -129,7 +121,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/ciclos',
+  path:     '/ciclos',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateCicloSchema } } } },
@@ -140,7 +132,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/ciclos/{id}',
+  path:     '/ciclos/{id}',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -154,7 +146,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/ciclos/{id}',
+  path:     '/ciclos/{id}',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -166,7 +158,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/ciclos/{id}/activar',
+  path:     '/ciclos/{id}/activar',
   tags:     ['Ciclos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -492,14 +484,14 @@ registry.registerPath({
 // Turnos
 registry.registerPath({
   method:   'get',
-  path:     '/director/turnos',
+  path:     '/turnos',
   tags:     ['Turnos'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de turnos', content: { 'application/json': { schema: TurnoResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/turnos/{id}',
+  path:     '/turnos/{id}',
   tags:     ['Turnos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -510,7 +502,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/turnos',
+  path:     '/turnos',
   tags:     ['Turnos'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateTurnoSchema } } } },
@@ -521,7 +513,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/turnos/{id}',
+  path:     '/turnos/{id}',
   tags:     ['Turnos'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -535,7 +527,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/turnos/{id}',
+  path:     '/turnos/{id}',
   tags:     ['Turnos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -642,6 +634,197 @@ registry.registerPath({
   responses: {
     200: { description: 'Rol encontrado', content: { 'application/json': { schema: RolEmpleadoResponseSchema } } },
     404: { description: 'Rol no encontrado' },
+  },
+});
+
+// Usuarios
+registry.registerPath({
+  method:   'get',
+  path:     '/usuarios',
+  tags:     ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de usuarios', content: { 'application/json': { schema: UsuarioResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/usuarios/{id}',
+  tags:     ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    200: { description: 'Usuario encontrado', content: { 'application/json': { schema: UsuarioResponseSchema } } },
+    404: { description: 'Usuario no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/usuarios',
+  tags:     ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateUsuarioSchema } } } },
+  responses: {
+    201: { description: 'Usuario creado', content: { 'application/json': { schema: UsuarioResponseSchema } } },
+    409: { description: 'Correo duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/usuarios/{id}',
+  tags:     ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string().uuid() }),
+    body:   { content: { 'application/json': { schema: UpdateUsuarioSchema } } },
+  },
+  responses: {
+    200: { description: 'Usuario actualizado', content: { 'application/json': { schema: UsuarioResponseSchema } } },
+    404: { description: 'Usuario no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/usuarios/{id}',
+  tags:     ['Usuarios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    204: { description: 'Usuario eliminado' },
+    404: { description: 'Usuario no encontrado' },
+  },
+});
+
+// Roles
+registry.registerPath({
+  method:   'get',
+  path:     '/roles',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de roles', content: { 'application/json': { schema: RolResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/roles/{id}',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    200: { description: 'Rol encontrado', content: { 'application/json': { schema: RolResponseSchema } } },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/roles',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateRolSchema } } } },
+  responses: {
+    201: { description: 'Rol creado', content: { 'application/json': { schema: RolResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/roles/{id}',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string().uuid() }),
+    body:   { content: { 'application/json': { schema: UpdateRolSchema } } },
+  },
+  responses: {
+    200: { description: 'Rol actualizado', content: { 'application/json': { schema: RolResponseSchema } } },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/roles/{id}',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    204: { description: 'Rol eliminado' },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/roles/{id}/permisos',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string().uuid() }),
+    body:   { content: { 'application/json': { schema: AsignarPermisosSchema } } },
+  },
+  responses: {
+    200: { description: 'Permisos asignados', content: { 'application/json': { schema: RolResponseSchema } } },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/roles/recargar',
+  tags:     ['Roles'],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: { description: 'Cache de permisos recargado' },
+  },
+});
+
+// Permisos
+registry.registerPath({
+  method:   'get',
+  path:     '/permisos',
+  tags:     ['Permisos'],
+  security: [{ bearerAuth: [] }],
+  responses: { 200: { description: 'Lista de permisos', content: { 'application/json': { schema: PermisoResponseSchema } } } },
+});
+registry.registerPath({
+  method:   'get',
+  path:     '/permisos/{id}',
+  tags:     ['Permisos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    200: { description: 'Permiso encontrado', content: { 'application/json': { schema: PermisoResponseSchema } } },
+    404: { description: 'Permiso no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/permisos',
+  tags:     ['Permisos'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreatePermisoSchema } } } },
+  responses: {
+    201: { description: 'Permiso creado', content: { 'application/json': { schema: PermisoResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/permisos/{id}',
+  tags:     ['Permisos'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string().uuid() }),
+    body:   { content: { 'application/json': { schema: UpdatePermisoSchema } } },
+  },
+  responses: {
+    200: { description: 'Permiso actualizado', content: { 'application/json': { schema: PermisoResponseSchema } } },
+    404: { description: 'Permiso no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/permisos/{id}',
+  tags:     ['Permisos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string().uuid() }) },
+  responses: {
+    204: { description: 'Permiso eliminado' },
+    404: { description: 'Permiso no encontrado' },
   },
 });
 

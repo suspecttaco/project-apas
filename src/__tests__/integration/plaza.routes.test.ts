@@ -3,19 +3,12 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC          = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_EMPLEADO     = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_NOMBRAMIENTO = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_MATERIA      = 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_GRUPO        = 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
 
 const plazaBase = {
   id:             'uuid-plaza',
@@ -49,13 +42,13 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/plazas', () => {
+describe('GET /api/plazas', () => {
 
   it('debe retornar 200 con lista de plazas', async () => {
     mockPrisma.plaza.findMany.mockResolvedValue([plazaBase] as any);
 
     const res = await request(app)
-      .get('/api/director/plazas')
+      .get('/api/plazas')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -63,18 +56,18 @@ describe('GET /api/director/plazas', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/plazas');
+    const res = await request(app).get('/api/plazas');
     expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/director/plazas/:id', () => {
+describe('GET /api/plazas/:id', () => {
 
   it('debe retornar 200 con la plaza encontrada', async () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(plazaBase as any);
 
     const res = await request(app)
-      .get('/api/director/plazas/uuid-plaza')
+      .get('/api/plazas/uuid-plaza')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -85,14 +78,14 @@ describe('GET /api/director/plazas/:id', () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/director/plazas/uuid-inexistente')
+      .get('/api/plazas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/director/plazas', () => {
+describe('POST /api/plazas', () => {
 
   it('debe retornar 201 al crear plaza correctamente', async () => {
     mockPrisma.empleado.findFirst.mockResolvedValue(empleadoBase as any);
@@ -104,7 +97,7 @@ describe('POST /api/director/plazas', () => {
     mockPrisma.plazaGrupo.createMany.mockResolvedValue({ count: 1 });
 
     const res = await request(app)
-      .post('/api/director/plazas')
+      .post('/api/plazas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idEmpleado:     UUID_EMPLEADO,
@@ -123,7 +116,7 @@ describe('POST /api/director/plazas', () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(plazaBase as any);
 
     const res = await request(app)
-      .post('/api/director/plazas')
+      .post('/api/plazas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idEmpleado:     UUID_EMPLEADO,
@@ -136,7 +129,7 @@ describe('POST /api/director/plazas', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/director/plazas')
+      .post('/api/plazas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ codigoPlaza: '10EES0001P1A001' });
 
@@ -144,7 +137,7 @@ describe('POST /api/director/plazas', () => {
   });
 });
 
-describe('PUT /api/director/plazas/:id', () => {
+describe('PUT /api/plazas/:id', () => {
 
   it('debe retornar 200 al actualizar correctamente', async () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(plazaBase as any);
@@ -152,7 +145,7 @@ describe('PUT /api/director/plazas/:id', () => {
     mockPrisma.plaza.update.mockResolvedValue({ ...plazaBase, horasClase: 25 } as any);
 
     const res = await request(app)
-      .put('/api/director/plazas/uuid-plaza')
+      .put('/api/plazas/uuid-plaza')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ horasClase: 25 });
 
@@ -163,7 +156,7 @@ describe('PUT /api/director/plazas/:id', () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/director/plazas/uuid-inexistente')
+      .put('/api/plazas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ horasClase: 25 });
 
@@ -171,14 +164,14 @@ describe('PUT /api/director/plazas/:id', () => {
   });
 });
 
-describe('DELETE /api/director/plazas/:id', () => {
+describe('DELETE /api/plazas/:id', () => {
 
   it('debe retornar 204 al eliminar correctamente', async () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(plazaBase as any);
     mockPrisma.plaza.update.mockResolvedValue({ ...plazaBase, activo: false } as any);
 
     const res = await request(app)
-      .delete('/api/director/plazas/uuid-plaza')
+      .delete('/api/plazas/uuid-plaza')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(204);
@@ -188,7 +181,7 @@ describe('DELETE /api/director/plazas/:id', () => {
     mockPrisma.plaza.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .delete('/api/director/plazas/uuid-inexistente')
+      .delete('/api/plazas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);

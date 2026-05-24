@@ -3,7 +3,6 @@ import { AuthController } from './auth.controller';
 
 const router = Router();
 
-router.post('/supervisor/login', AuthController.loginSupervisor);
-router.post('/director/login',   AuthController.loginDirector);
+router.post('/login', AuthController.login);
 
 export default router;

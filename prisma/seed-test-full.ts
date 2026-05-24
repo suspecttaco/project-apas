@@ -4,10 +4,8 @@ import bcrypt from 'bcrypt';
 
 const db = new PrismaClient();
 
-// ─── helpers ────────────────────────────────────────────────────────────────
 const fecha = (y: number, m: number, d: number) => new Date(y, m - 1, d);
 
-// ─── datos fijos ─────────────────────────────────────────────────────────────
 const ESCUELA_CLAVE = 'SIN0025X';
 
 const PERSONAL: {
@@ -39,7 +37,7 @@ const PERSONAL: {
     nombre: 'Maria Elena', appP: 'Gastelum', appM: 'Lizarraga',
     rfc: 'GALM820304MJ2', curp: 'GALM820304MSLSRR02',
     lugarNac: 'Culiacan, Sinaloa', estadoCivil: 'Casada', fIngreso: fecha(2008, 8, 16),
-    calle: 'Calle alvaro Obregon 123', colonia: 'Rosales', ciudad: 'Los Mochis', cp: '81220', tel: '6681234002', correo: 'subdir@sec25.edu.mx',
+    calle: 'Calle Alvaro Obregon 123', colonia: 'Rosales', ciudad: 'Los Mochis', cp: '81220', tel: '6681234002', correo: 'subdir@sec25.edu.mx',
     estudiosPprof: 'Licenciatura en Pedagogia', escuelaRealiz: 'UAS', tipoEstudio: 'Titulado',
     ultimoGrado: 'Licenciatura', institucion: 'Universidad Autonoma de Sinaloa', especialidades: 'Pedagogia Institucional',
     rolNombre: 'Subdirector', nombramientoNombre: 'Subdirector de Escuela Secundaria General',
@@ -62,7 +60,7 @@ const PERSONAL: {
     rfc: 'BOFA830921MJ4', curp: 'BOFA830921MSLNLN04',
     lugarNac: 'Los Mochis, Sinaloa', estadoCivil: 'Soltera', fIngreso: fecha(2010, 8, 16),
     calle: 'Av. Leyva 345', colonia: 'San Carlos', ciudad: 'Los Mochis', cp: '81230', tel: '6681234004', correo: 'abojorquez@sec25.edu.mx',
-    estudiosPprof: 'Licenciatura en Español y Literatura', escuelaRealiz: 'UPN', tipoEstudio: 'Titulado',
+    estudiosPprof: 'Licenciatura en Espanol y Literatura', escuelaRealiz: 'UPN', tipoEstudio: 'Titulado',
     ultimoGrado: 'Licenciatura', institucion: 'Universidad Pedagogica Nacional', especialidades: 'Didactica de la Lengua',
     rolNombre: 'Docente', nombramientoNombre: 'Profesor de Educacion Secundaria',
     materiaNombre: 'Espanol', horasClase: 20,
@@ -106,14 +104,14 @@ const PERSONAL: {
     rfc: 'OURL920305MJ8', curp: 'OURL920305MSLSNR08',
     lugarNac: 'Culiacan, Sinaloa', estadoCivil: 'Soltera', fIngreso: fecha(2015, 8, 16),
     calle: 'Av. Castro 567', colonia: 'Lomas del Valle', ciudad: 'Los Mochis', cp: '81260', tel: '6681234008', correo: 'losuna@sec25.edu.mx',
-    estudiosPprof: 'Licenciatura en Formacion Civica y etica', escuelaRealiz: 'UPN', tipoEstudio: 'Titulado',
-    ultimoGrado: 'Licenciatura', institucion: 'Universidad Pedagogica Nacional', especialidades: 'etica y Ciudadania',
+    estudiosPprof: 'Licenciatura en Formacion Civica y Etica', escuelaRealiz: 'UPN', tipoEstudio: 'Titulado',
+    ultimoGrado: 'Licenciatura', institucion: 'Universidad Pedagogica Nacional', especialidades: 'Etica y Ciudadania',
     rolNombre: 'Docente', nombramientoNombre: 'Profesor de Educacion Secundaria',
     materiaNombre: 'Formacion Civica y Etica', horasClase: 12,
     codigoPlaza: '10EES25001DFCE001', numControl: '8',
   },
   {
-    nombre: 'Miguel angel', appP: 'Lizarraga', appM: 'Acosta',
+    nombre: 'Miguel Angel', appP: 'Lizarraga', appM: 'Acosta',
     rfc: 'LIAM860115HJ9', curp: 'LIAM860115HSLZCG09',
     lugarNac: 'Los Mochis, Sinaloa', estadoCivil: 'Casado', fIngreso: fecha(2009, 8, 16),
     calle: 'Calle Independencia 321', colonia: 'Benito Juarez', ciudad: 'Los Mochis', cp: '81200', tel: '6681234009', correo: 'mlizarraga@sec25.edu.mx',
@@ -157,7 +155,7 @@ const PERSONAL: {
     codigoPlaza: '10EES25001PORI001', numControl: '12',
   },
   {
-    nombre: 'Ernesto', appP: 'Cañedo', appM: 'Palafox',
+    nombre: 'Ernesto', appP: 'Canedo', appM: 'Palafox',
     rfc: 'CAPE720318HJ3', curp: 'CAPE720318HSLNRN13',
     lugarNac: 'Ahome, Sinaloa', estadoCivil: 'Casado', fIngreso: fecha(1999, 8, 16),
     calle: 'Calle Juarez 456', colonia: 'Las Fuentes', ciudad: 'Los Mochis', cp: '81200', tel: '6681234013', correo: 'ecanedo@sec25.edu.mx',
@@ -191,7 +189,6 @@ const PERSONAL: {
   },
 ];
 
-// Horarios base por materia (diaSemana -> hInicio -> hFin)
 const HORARIO_BLOQUES = [
   { hInicio: '07:00', hFin: '07:50' },
   { hInicio: '07:50', hFin: '08:40' },
@@ -207,23 +204,25 @@ const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'] as const;
 async function main() {
   console.log('Iniciando seed completo...');
 
-  // Buscar plan y datos base
   const plan = await db.planEstudios.findFirst({ where: { nombre: 'Plan 2017' } });
   if (!plan) { console.error('Primero corre npm run seed'); process.exit(1); }
 
-  const grados = await db.grado.findMany({ where: { idPlan: plan.id }, orderBy: { numero: 'asc' } });
-  const materias = await db.materia.findMany({ where: { idPlan: plan.id } });
-  const roles = await db.rolEmpleado.findMany();
+  const grados    = await db.grado.findMany({ where: { idPlan: plan.id }, orderBy: { numero: 'asc' } });
+  const materias  = await db.materia.findMany({ where: { idPlan: plan.id } });
+  const roles     = await db.rolEmpleado.findMany();
   const nombramientos = await db.nombramiento.findMany();
 
-  const rolMap    = Object.fromEntries(roles.map(r => [r.nombre, r.id]));
-  const nombMap   = Object.fromEntries(nombramientos.map(n => [n.nombre, n.id]));
-  const materiaMap = Object.fromEntries(materias.map(m => [m.nombre, m.id]));
+  const rolMap        = Object.fromEntries(roles.map(r => [r.nombre, r.id]));
+  const nombMap       = Object.fromEntries(nombramientos.map(n => [n.nombre, n.id]));
+  const materiaMap    = Object.fromEntries(materias.map(m => [m.nombre, m.id]));
 
-  // ── Escuela ──────────────────────────────────────────────────────────────
+  // Rol de usuario director -- se busca desde BD sin hardcode
+  const rolUsuarioDirector = await db.rolUsuario.findFirst({ where: { nombre: 'director' } });
+  if (!rolUsuarioDirector) { console.error('Rol director no encontrado -- corre npm run seed primero'); process.exit(1); }
+
+  // Escuela
   let escuela = await db.escuela.findFirst({ where: { clave: ESCUELA_CLAVE } });
   if (!escuela) {
-    const hash = await bcrypt.hash('director123', 12);
     escuela = await db.escuela.create({
       data: {
         nombre:      'Secundaria General No. 25 Lazaro Cardenas',
@@ -237,13 +236,6 @@ async function main() {
         municipio:   'Ahome',
         estado:      'Sinaloa',
         codigoPostal:'81200',
-        directores: {
-          create: {
-            nombre: 'Carlos Alberto Ramirez Ibarra',
-            correo: 'director@sec25.edu.mx',
-            contra: hash,
-          },
-        },
       },
     });
     console.log(`Escuela creada: ${escuela.nombre}`);
@@ -251,7 +243,24 @@ async function main() {
     console.log(`Escuela ya existe: ${escuela.nombre}`);
   }
 
-  // ── Ciclo ─────────────────────────────────────────────────────────────────
+  // Usuario director -- usando tabla usuarios con el rol director de BD
+  const directorCorreo = 'director@sec25.edu.mx';
+  const directorExiste = await db.usuario.findFirst({ where: { correo: directorCorreo } });
+  if (!directorExiste) {
+    const hash = await bcrypt.hash('director123', 12);
+    await db.usuario.create({
+      data: {
+        nombre: 'Carlos Alberto Ramirez Ibarra',
+        correo: directorCorreo,
+        contra: hash,
+        idRol:  rolUsuarioDirector.id,
+        idEsc:  escuela.id,
+      },
+    });
+    console.log(`Usuario director creado: ${directorCorreo}`);
+  }
+
+  // Ciclo
   let ciclo = await db.ciclo.findFirst({ where: { idEsc: escuela.id, nombre: '2024-2025' } });
   if (!ciclo) {
     ciclo = await db.ciclo.create({
@@ -267,7 +276,7 @@ async function main() {
     console.log(`Ciclo creado: ${ciclo.nombre}`);
   }
 
-  // ── Turnos ────────────────────────────────────────────────────────────────
+  // Turnos
   let turnoMat = await db.turno.findFirst({ where: { idEsc: escuela.id, nombre: 'Matutino' } });
   if (!turnoMat) {
     turnoMat = await db.turno.create({
@@ -282,8 +291,8 @@ async function main() {
   }
   console.log('Turnos listos');
 
-  // ── Grupos: 2 por grado por turno = 12 grupos ─────────────────────────────
-  const gruposCreados: Record<string, string> = {}; // key: "1-Mat-A" -> id
+  // Grupos: 2 por grado por turno = 12 grupos
+  const gruposCreados: Record<string, string> = {};
 
   for (const grado of grados) {
     for (const turno of [turnoMat, turnoVes]) {
@@ -296,7 +305,6 @@ async function main() {
           grupo = await db.grupo.create({
             data: { idEsc: escuela.id, idGrado: grado.id, idTurno: turno.id, nombre: letra },
           });
-          // Estadistica
           const inscH = 13 + Math.floor(Math.random() * 6);
           const inscM = 12 + Math.floor(Math.random() * 6);
           const altasH = Math.floor(Math.random() * 3);
@@ -323,7 +331,7 @@ async function main() {
   }
   console.log(`Grupos y estadisticas listos (${Object.keys(gruposCreados).length} grupos)`);
 
-  // ── Empleados ────────────────────────────────────────────────────────────
+  // Empleados
   const empleadosCreados: { id: string; numControl: string; materiaNombre?: string }[] = [];
 
   for (const p of PERSONAL) {
@@ -346,8 +354,9 @@ async function main() {
       },
     });
 
-    const idRol = rolMap[p.rolNombre];
+    const idRol         = rolMap[p.rolNombre];
     const idNombramiento = nombMap[p.nombramientoNombre];
+
     if (!idRol || !idNombramiento) {
       console.warn(`Rol o nombramiento no encontrado para ${p.nombre}: ${p.rolNombre} / ${p.nombramientoNombre}`);
     }
@@ -378,7 +387,6 @@ async function main() {
       },
     });
 
-    // Plaza
     const idMateria = p.materiaNombre ? materiaMap[p.materiaNombre] : undefined;
     if (idNombramiento) {
       await db.plaza.create({
@@ -401,15 +409,13 @@ async function main() {
   }
   console.log(`${empleadosCreados.length} empleados procesados`);
 
-  // ── Plazas → grupos (docentes frente a grupo) ────────────────────────────
-  // Cada docente atiende grupos de los 3 grados, matutino y vespertino
+  // Plazas a grupos (docentes frente a grupo)
   const docentesConMateria = empleadosCreados.filter(e => e.materiaNombre);
 
   for (const doc of docentesConMateria) {
     const plaza = await db.plaza.findFirst({ where: { idEmpleado: doc.id, activo: true } });
     if (!plaza) continue;
 
-    // Asignar grupo A y B de cada grado en turno matutino
     const grupoIds: string[] = [];
     for (const grado of grados) {
       const idA = gruposCreados[`${grado.numero}-Matutino-A`];
@@ -427,8 +433,7 @@ async function main() {
   }
   console.log('PlazaGrupo asignados');
 
-  // ── Horarios ──────────────────────────────────────────────────────────────
-  // Distribuir materias en los slots de cada grupo matutino
+  // Horarios
   const materiasOrden = [
     'Espanol', 'Matematicas', 'Ciencias', 'Historia', 'Geografia',
     'Formacion Civica y Etica', 'Educacion Fisica', 'Artes', 'Tecnologia',
@@ -439,16 +444,14 @@ async function main() {
       const idGrupo = gruposCreados[`${grado.numero}-Matutino-${letra}`];
       if (!idGrupo) continue;
 
-      // 7 bloques x 5 dias = 35 slots, distribuimos las materias
       for (let diaIdx = 0; diaIdx < DIAS.length; diaIdx++) {
         const dia = DIAS[diaIdx];
         for (let bloqueIdx = 0; bloqueIdx < HORARIO_BLOQUES.length; bloqueIdx++) {
-          const bloque = HORARIO_BLOQUES[bloqueIdx];
-          const materiaIdx = (diaIdx * HORARIO_BLOQUES.length + bloqueIdx) % materiasOrden.length;
+          const bloque      = HORARIO_BLOQUES[bloqueIdx];
+          const materiaIdx  = (diaIdx * HORARIO_BLOQUES.length + bloqueIdx) % materiasOrden.length;
           const materiaNombre = materiasOrden[materiaIdx];
-          const idMateria = materiaMap[materiaNombre];
+          const idMateria   = materiaMap[materiaNombre];
 
-          // Buscar el empleado que imparte esta materia
           const docente = docentesConMateria.find(d => d.materiaNombre === materiaNombre);
           if (!docente) continue;
 

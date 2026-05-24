@@ -3,21 +3,7 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
-
-const UUID_ESC = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
-
-const tokenAdmin = () => jwt.sign(
-  { id: 'uuid-admin', rol: 'admin' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
+import { tokenAdmin, tokenDirector, UUID_ESC } from './setup';
 
 const turnoBase = {
   id:      'uuid-turno',
@@ -35,13 +21,13 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/turnos', () => {
+describe('GET /api/turnos', () => {
 
   it('debe retornar 200 con lista de turnos', async () => {
     mockPrisma.turno.findMany.mockResolvedValue([turnoBase]);
 
     const res = await request(app)
-      .get('/api/director/turnos')
+      .get('/api/turnos')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -49,25 +35,26 @@ describe('GET /api/director/turnos', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/turnos');
+    const res = await request(app).get('/api/turnos');
     expect(res.status).toBe(401);
   });
 
-  it('debe retornar 403 con token de supervisor', async () => {
+  it('debe retornar 403 para admin sin idEsc', async () => {
     const res = await request(app)
-      .get('/api/director/turnos')
+      .get('/api/turnos')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
+
     expect(res.status).toBe(403);
   });
 });
 
-describe('GET /api/director/turnos/:id', () => {
+describe('GET /api/turnos/:id', () => {
 
   it('debe retornar 200 con el turno encontrado', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
 
     const res = await request(app)
-      .get('/api/director/turnos/uuid-turno')
+      .get('/api/turnos/uuid-turno')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -78,21 +65,21 @@ describe('GET /api/director/turnos/:id', () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/director/turnos/uuid-inexistente')
+      .get('/api/turnos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/director/turnos', () => {
+describe('POST /api/turnos', () => {
 
   it('debe retornar 201 al crear turno correctamente', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
     mockPrisma.turno.create.mockResolvedValue(turnoBase);
 
     const res = await request(app)
-      .post('/api/director/turnos')
+      .post('/api/turnos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'Matutino', hInicio: '07:00', hFin: '13:00' });
 
@@ -104,7 +91,7 @@ describe('POST /api/director/turnos', () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
 
     const res = await request(app)
-      .post('/api/director/turnos')
+      .post('/api/turnos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'Matutino', hInicio: '07:00', hFin: '13:00' });
 
@@ -113,7 +100,7 @@ describe('POST /api/director/turnos', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/director/turnos')
+      .post('/api/turnos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'Matutino' });
 
@@ -121,7 +108,7 @@ describe('POST /api/director/turnos', () => {
   });
 });
 
-describe('PUT /api/director/turnos/:id', () => {
+describe('PUT /api/turnos/:id', () => {
 
   it('debe retornar 200 al actualizar correctamente', async () => {
     mockPrisma.turno.findFirst
@@ -130,7 +117,7 @@ describe('PUT /api/director/turnos/:id', () => {
     mockPrisma.turno.update.mockResolvedValue({ ...turnoBase, hFin: '14:00' });
 
     const res = await request(app)
-      .put('/api/director/turnos/uuid-turno')
+      .put('/api/turnos/uuid-turno')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ hFin: '14:00' });
 
@@ -142,7 +129,7 @@ describe('PUT /api/director/turnos/:id', () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/director/turnos/uuid-inexistente')
+      .put('/api/turnos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ hFin: '14:00' });
 
@@ -150,14 +137,14 @@ describe('PUT /api/director/turnos/:id', () => {
   });
 });
 
-describe('DELETE /api/director/turnos/:id', () => {
+describe('DELETE /api/turnos/:id', () => {
 
   it('debe retornar 204 al eliminar correctamente', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
     mockPrisma.turno.update.mockResolvedValue({ ...turnoBase, activo: false });
 
     const res = await request(app)
-      .delete('/api/director/turnos/uuid-turno')
+      .delete('/api/turnos/uuid-turno')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(204);
@@ -167,7 +154,7 @@ describe('DELETE /api/director/turnos/:id', () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .delete('/api/director/turnos/uuid-inexistente')
+      .delete('/api/turnos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);

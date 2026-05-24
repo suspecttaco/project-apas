@@ -3,18 +3,11 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC      = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_EMPLEADO = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_GRUPO    = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_MATERIA  = 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
 
 const slotBase = {
   id:         'uuid-slot',
@@ -39,14 +32,14 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/horarios/empleado/:idEmpleado', () => {
+describe('GET /api/horarios/empleado/:idEmpleado', () => {
 
   it('debe retornar 200 con el horario del empleado', async () => {
     mockPrisma.empleado.findFirst.mockResolvedValue(empleadoBase as any);
     mockPrisma.horarioSlot.findMany.mockResolvedValue([slotBase] as any);
 
     const res = await request(app)
-      .get(`/api/director/horarios/empleado/${UUID_EMPLEADO}`)
+      .get(`/api/horarios/empleado/${UUID_EMPLEADO}`)
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -57,27 +50,26 @@ describe('GET /api/director/horarios/empleado/:idEmpleado', () => {
     mockPrisma.empleado.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get(`/api/director/horarios/empleado/${UUID_EMPLEADO}`)
+      .get(`/api/horarios/empleado/${UUID_EMPLEADO}`)
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app)
-      .get(`/api/director/horarios/empleado/${UUID_EMPLEADO}`);
+    const res = await request(app).get(`/api/horarios/empleado/${UUID_EMPLEADO}`);
     expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/director/horarios/grupo/:idGrupo', () => {
+describe('GET /api/horarios/grupo/:idGrupo', () => {
 
   it('debe retornar 200 con el horario del grupo', async () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(grupoBase as any);
     mockPrisma.horarioSlot.findMany.mockResolvedValue([slotBase] as any);
 
     const res = await request(app)
-      .get(`/api/director/horarios/grupo/${UUID_GRUPO}`)
+      .get(`/api/horarios/grupo/${UUID_GRUPO}`)
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -88,14 +80,14 @@ describe('GET /api/director/horarios/grupo/:idGrupo', () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get(`/api/director/horarios/grupo/${UUID_GRUPO}`)
+      .get(`/api/horarios/grupo/${UUID_GRUPO}`)
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/director/horarios', () => {
+describe('POST /api/horarios', () => {
 
   it('debe retornar 201 al crear slot correctamente', async () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(grupoBase as any);
@@ -104,7 +96,7 @@ describe('POST /api/director/horarios', () => {
     mockPrisma.horarioSlot.create.mockResolvedValue(slotBase as any);
 
     const res = await request(app)
-      .post('/api/director/horarios')
+      .post('/api/horarios')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idGrupo:    UUID_GRUPO,
@@ -124,7 +116,7 @@ describe('POST /api/director/horarios', () => {
     mockPrisma.horarioSlot.findFirst.mockResolvedValue(slotBase as any);
 
     const res = await request(app)
-      .post('/api/director/horarios')
+      .post('/api/horarios')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idGrupo:   UUID_GRUPO,
@@ -138,7 +130,7 @@ describe('POST /api/director/horarios', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/director/horarios')
+      .post('/api/horarios')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ diaSemana: 'Lunes' });
 
@@ -146,14 +138,14 @@ describe('POST /api/director/horarios', () => {
   });
 });
 
-describe('DELETE /api/director/horarios/:id', () => {
+describe('DELETE /api/horarios/:id', () => {
 
   it('debe retornar 204 al eliminar correctamente', async () => {
     mockPrisma.horarioSlot.findFirst.mockResolvedValue(slotBase as any);
     mockPrisma.horarioSlot.update.mockResolvedValue({ ...slotBase, activo: false } as any);
 
     const res = await request(app)
-      .delete('/api/director/horarios/uuid-slot')
+      .delete('/api/horarios/uuid-slot')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(204);
@@ -163,7 +155,7 @@ describe('DELETE /api/director/horarios/:id', () => {
     mockPrisma.horarioSlot.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .delete('/api/director/horarios/uuid-inexistente')
+      .delete('/api/horarios/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);

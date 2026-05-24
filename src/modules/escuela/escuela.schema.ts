@@ -4,7 +4,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 extendZodWithOpenApi(z);
 
 export const CreateEscuelaSchema = z.object({
-  nombre:       z.string().max(100).openapi({ example: 'Secundaria Lazaro Cardenas' }),
+  nombre:       z.string().max(100).openapi({ example: 'Secundaria General No. 1' }),
   clave:        z.string().max(10).openapi({ example: 'SIN0001' }),
   zonaEscolar:  z.string().max(5).openapi({ example: 'Z001' }),
   nivel:        z.string().max(20).openapi({ example: 'Secundaria' }),
@@ -15,15 +15,9 @@ export const CreateEscuelaSchema = z.object({
   municipio:    z.string().max(50).optional().openapi({ example: 'Ahome' }),
   estado:       z.string().max(50).optional().openapi({ example: 'Sinaloa' }),
   codigoPostal: z.string().max(5).optional().openapi({ example: '81200' }),
-  director: z.object({
-    nombre: z.string().max(100).openapi({ example: 'Juan Perez Lopez' }),
-    correo: z.string().email().openapi({ example: 'director@escuela.mx' }),
-    contra: z.string().min(6).openapi({ example: 'director123' }),
-  }),
 }).openapi('CreateEscuela');
 
-export const UpdateEscuelaSchema = CreateEscuelaSchema.omit({ director: true }).partial()
-  .openapi('UpdateEscuela');
+export const UpdateEscuelaSchema = CreateEscuelaSchema.partial().openapi('UpdateEscuela');
 
 export const EscuelaResponseSchema = z.object({
   id:           z.string().uuid(),

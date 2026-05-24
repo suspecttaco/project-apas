@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import app from './app';
 import { db } from './lib/db';
+import { cargarPermisos } from './lib/permissions';
 
 const PORT = process.env.PORT ?? 3000;
 
@@ -8,6 +9,8 @@ async function main() {
     try {
         await db.$connect();
         console.log('DB Connected');
+
+        await cargarPermisos();
 
         app.listen(PORT, () => {
             console.log(`Server running on localhost:${PORT}`);

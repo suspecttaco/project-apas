@@ -3,31 +3,17 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
-
-const UUID_ESC = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
-
-const tokenAdmin = () => jwt.sign(
-  { id: 'uuid-admin', rol: 'admin' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
+import { tokenAdmin, tokenDirector } from './setup';
 
 beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-//  Plan de Estudios 
+// Plan de Estudios
 
 describe('GET /api/plan-estudios', () => {
 
-  it('debe retornar 200 con lista de planes', async () => {
+  it('debe retornar 200 con lista de planes para director', async () => {
     mockPrisma.planEstudios.findMany.mockResolvedValue([{
       id: 'uuid-plan', nombre: 'Plan 2017', desc: null,
       activo: true, fCre: new Date(), fMod: new Date(),
@@ -41,7 +27,7 @@ describe('GET /api/plan-estudios', () => {
     expect(res.body).toHaveLength(1);
   });
 
-  it('debe retornar 200 con token de supervisor tambien', async () => {
+  it('debe retornar 200 con lista de planes para admin', async () => {
     mockPrisma.planEstudios.findMany.mockResolvedValue([]);
 
     const res = await request(app)
@@ -85,7 +71,7 @@ describe('GET /api/plan-estudios/:id', () => {
   });
 });
 
-//  Grados 
+// Grados
 
 describe('GET /api/grados', () => {
 
@@ -136,7 +122,7 @@ describe('GET /api/grados/:id', () => {
   });
 });
 
-//  Materias 
+// Materias
 
 describe('GET /api/materias', () => {
 
@@ -187,7 +173,7 @@ describe('GET /api/materias/:id', () => {
   });
 });
 
-//  Nombramientos 
+// Nombramientos
 
 describe('GET /api/nombramientos', () => {
 
@@ -238,7 +224,7 @@ describe('GET /api/nombramientos/:id', () => {
   });
 });
 
-//  Roles Empleado 
+// Roles Empleado
 
 describe('GET /api/roles-empleado', () => {
 

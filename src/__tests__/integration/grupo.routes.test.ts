@@ -3,17 +3,10 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC   = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_GRADO = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_TURNO = 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
 
 const grupoBase = {
   id:      'uuid-grupo',
@@ -30,13 +23,13 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/grupos', () => {
+describe('GET /api/grupos', () => {
 
   it('debe retornar 200 con lista de grupos', async () => {
     mockPrisma.grupo.findMany.mockResolvedValue([grupoBase]);
 
     const res = await request(app)
-      .get('/api/director/grupos')
+      .get('/api/grupos')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -44,18 +37,18 @@ describe('GET /api/director/grupos', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/grupos');
+    const res = await request(app).get('/api/grupos');
     expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/director/grupos/:id', () => {
+describe('GET /api/grupos/:id', () => {
 
   it('debe retornar 200 con el grupo encontrado', async () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(grupoBase);
 
     const res = await request(app)
-      .get('/api/director/grupos/uuid-grupo')
+      .get('/api/grupos/uuid-grupo')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -66,14 +59,14 @@ describe('GET /api/director/grupos/:id', () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/director/grupos/uuid-inexistente')
+      .get('/api/grupos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/director/grupos', () => {
+describe('POST /api/grupos', () => {
 
   it('debe retornar 201 al crear grupo correctamente', async () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(null);
@@ -82,7 +75,7 @@ describe('POST /api/director/grupos', () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .post('/api/director/grupos')
+      .post('/api/grupos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ idGrado: UUID_GRADO, idTurno: UUID_TURNO, nombre: 'A' });
 
@@ -93,7 +86,7 @@ describe('POST /api/director/grupos', () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(grupoBase);
 
     const res = await request(app)
-      .post('/api/director/grupos')
+      .post('/api/grupos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ idGrado: UUID_GRADO, idTurno: UUID_TURNO, nombre: 'A' });
 
@@ -102,7 +95,7 @@ describe('POST /api/director/grupos', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/director/grupos')
+      .post('/api/grupos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'A' });
 
@@ -110,7 +103,7 @@ describe('POST /api/director/grupos', () => {
   });
 });
 
-describe('PUT /api/director/grupos/:id', () => {
+describe('PUT /api/grupos/:id', () => {
 
   it('debe retornar 200 al actualizar correctamente', async () => {
     mockPrisma.grupo.findFirst
@@ -120,7 +113,7 @@ describe('PUT /api/director/grupos/:id', () => {
     mockPrisma.grupo.update.mockResolvedValue({ ...grupoBase, nombre: 'B' });
 
     const res = await request(app)
-      .put('/api/director/grupos/uuid-grupo')
+      .put('/api/grupos/uuid-grupo')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'B' });
 
@@ -132,7 +125,7 @@ describe('PUT /api/director/grupos/:id', () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/director/grupos/uuid-inexistente')
+      .put('/api/grupos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ nombre: 'B' });
 
@@ -140,14 +133,14 @@ describe('PUT /api/director/grupos/:id', () => {
   });
 });
 
-describe('DELETE /api/director/grupos/:id', () => {
+describe('DELETE /api/grupos/:id', () => {
 
   it('debe retornar 204 al eliminar correctamente', async () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(grupoBase);
     mockPrisma.grupo.update.mockResolvedValue({ ...grupoBase, activo: false });
 
     const res = await request(app)
-      .delete('/api/director/grupos/uuid-grupo')
+      .delete('/api/grupos/uuid-grupo')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(204);
@@ -157,7 +150,7 @@ describe('DELETE /api/director/grupos/:id', () => {
     mockPrisma.grupo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .delete('/api/director/grupos/uuid-inexistente')
+      .delete('/api/grupos/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);

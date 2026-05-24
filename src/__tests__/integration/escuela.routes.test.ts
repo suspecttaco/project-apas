@@ -3,19 +3,7 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
-
-const tokenAdmin = () => jwt.sign(
-  { id: 'uuid-admin', rol: 'admin' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: 'uuid-escuela' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
+import { tokenAdmin, tokenSupervisor, tokenDirector } from './setup';
 
 const escuelaBase = {
   id:           'uuid-escuela',
@@ -33,46 +21,56 @@ const escuelaBase = {
   activo:       true,
   fCre:         new Date(),
   fMod:         new Date(),
-  directores:   [],
 };
 
 beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/supervisor/escuelas', () => {
+describe('GET /api/escuelas', () => {
 
-  it('debe retornar 200 con lista de escuelas', async () => {
+  it('debe retornar 200 con lista de escuelas para admin', async () => {
     mockPrisma.escuela.findMany.mockResolvedValue([escuelaBase]);
 
     const res = await request(app)
-      .get('/api/supervisor/escuelas')
+      .get('/api/escuelas')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
   });
 
-  it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/supervisor/escuelas');
-    expect(res.status).toBe(401);
+  it('debe retornar 200 con lista de escuelas para supervisor', async () => {
+    mockPrisma.escuela.findMany.mockResolvedValue([escuelaBase]);
+
+    const res = await request(app)
+      .get('/api/escuelas')
+      .set('Authorization', `Bearer ${tokenSupervisor()}`);
+
+    expect(res.status).toBe(200);
   });
 
-  it('debe retornar 403 con token de director', async () => {
+  it('debe retornar 403 para director', async () => {
     const res = await request(app)
-      .get('/api/supervisor/escuelas')
+      .get('/api/escuelas')
       .set('Authorization', `Bearer ${tokenDirector()}`);
+
     expect(res.status).toBe(403);
+  });
+
+  it('debe retornar 401 sin token', async () => {
+    const res = await request(app).get('/api/escuelas');
+    expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/supervisor/escuelas/:id', () => {
+describe('GET /api/escuelas/:id', () => {
 
   it('debe retornar 200 con la escuela encontrada', async () => {
-    mockPrisma.escuela.findFirst.mockResolvedValue(escuelaBase as any);
+    mockPrisma.escuela.findFirst.mockResolvedValue({ ...escuelaBase, usuarios: [] } as any);
 
     const res = await request(app)
-      .get('/api/supervisor/escuelas/uuid-escuela')
+      .get('/api/escuelas/uuid-escuela')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
     expect(res.status).toBe(200);
@@ -83,33 +81,27 @@ describe('GET /api/supervisor/escuelas/:id', () => {
     mockPrisma.escuela.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/supervisor/escuelas/uuid-inexistente')
+      .get('/api/escuelas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/supervisor/escuelas', () => {
+describe('POST /api/escuelas', () => {
 
   it('debe retornar 201 al crear escuela correctamente', async () => {
     mockPrisma.escuela.findFirst.mockResolvedValue(null);
-    mockPrisma.usuarioDirector.findFirst.mockResolvedValue(null);
     mockPrisma.escuela.create.mockResolvedValue(escuelaBase);
 
     const res = await request(app)
-      .post('/api/supervisor/escuelas')
+      .post('/api/escuelas')
       .set('Authorization', `Bearer ${tokenAdmin()}`)
       .send({
         nombre:      'Secundaria Lazaro Cardenas',
         clave:       'SIN0001',
         zonaEscolar: 'Z001',
         nivel:       'Secundaria',
-        director: {
-          nombre: 'Juan Perez',
-          correo: 'director@escuela.mx',
-          contra: 'director123',
-        },
       });
 
     expect(res.status).toBe(201);
@@ -119,18 +111,13 @@ describe('POST /api/supervisor/escuelas', () => {
     mockPrisma.escuela.findFirst.mockResolvedValue(escuelaBase);
 
     const res = await request(app)
-      .post('/api/supervisor/escuelas')
+      .post('/api/escuelas')
       .set('Authorization', `Bearer ${tokenAdmin()}`)
       .send({
         nombre:      'Otra Escuela',
         clave:       'SIN0001',
         zonaEscolar: 'Z001',
         nivel:       'Secundaria',
-        director: {
-          nombre: 'Director',
-          correo: 'director2@escuela.mx',
-          contra: 'director123',
-        },
       });
 
     expect(res.status).toBe(409);
@@ -138,26 +125,24 @@ describe('POST /api/supervisor/escuelas', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/supervisor/escuelas')
+      .post('/api/escuelas')
       .set('Authorization', `Bearer ${tokenAdmin()}`)
-      .send({ nombre: 'Sin clave ni director' });
+      .send({ nombre: 'Sin clave' });
 
     expect(res.status).toBe(400);
   });
 });
 
-describe('PUT /api/supervisor/escuelas/:id', () => {
+describe('PUT /api/escuelas/:id', () => {
 
   it('debe retornar 200 al actualizar correctamente', async () => {
     mockPrisma.escuela.findFirst
-      .mockResolvedValueOnce(escuelaBase as any)
+      .mockResolvedValueOnce({ ...escuelaBase, usuarios: [] } as any)
       .mockResolvedValueOnce(null);
-    mockPrisma.escuela.update.mockResolvedValue({
-      ...escuelaBase, nombre: 'Nuevo Nombre',
-    });
+    mockPrisma.escuela.update.mockResolvedValue({ ...escuelaBase, nombre: 'Nuevo Nombre' });
 
     const res = await request(app)
-      .put('/api/supervisor/escuelas/uuid-escuela')
+      .put('/api/escuelas/uuid-escuela')
       .set('Authorization', `Bearer ${tokenAdmin()}`)
       .send({ nombre: 'Nuevo Nombre' });
 
@@ -169,7 +154,7 @@ describe('PUT /api/supervisor/escuelas/:id', () => {
     mockPrisma.escuela.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/supervisor/escuelas/uuid-inexistente')
+      .put('/api/escuelas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenAdmin()}`)
       .send({ nombre: 'Nuevo Nombre' });
 
@@ -177,14 +162,14 @@ describe('PUT /api/supervisor/escuelas/:id', () => {
   });
 });
 
-describe('DELETE /api/supervisor/escuelas/:id', () => {
+describe('DELETE /api/escuelas/:id', () => {
 
   it('debe retornar 204 al eliminar correctamente', async () => {
-    mockPrisma.escuela.findFirst.mockResolvedValue(escuelaBase as any);
+    mockPrisma.escuela.findFirst.mockResolvedValue({ ...escuelaBase, usuarios: [] } as any);
     mockPrisma.escuela.update.mockResolvedValue({ ...escuelaBase, activo: false });
 
     const res = await request(app)
-      .delete('/api/supervisor/escuelas/uuid-escuela')
+      .delete('/api/escuelas/uuid-escuela')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
     expect(res.status).toBe(204);
@@ -194,7 +179,7 @@ describe('DELETE /api/supervisor/escuelas/:id', () => {
     mockPrisma.escuela.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .delete('/api/supervisor/escuelas/uuid-inexistente')
+      .delete('/api/escuelas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
     expect(res.status).toBe(404);

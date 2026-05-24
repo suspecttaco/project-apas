@@ -7,22 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model UsuarioSupervisor {
+// Roles y permisos de acceso al sistema
+
+model RolUsuario {
+  id              String   @id @default(uuid())
+  nombre          String   @unique @db.VarChar(30)
+  desc            String?  @db.Text
+  // Si true, el usuario con este rol debe tener idEsc asignado para poder operar
+  requiereEscuela Boolean  @default(false)
+  activo          Boolean  @default(true)
+  fCre            DateTime @default(now())
+  fMod            DateTime @updatedAt
+
+  permisos RolPermisoUsuario[]
+  usuarios Usuario[]
+
+  @@map("roles_usuario")
+}
+
+model PermisoUsuario {
   id     String   @id @default(uuid())
-  nombre String   @db.VarChar(100)
-  correo String   @unique @db.VarChar(100)
-  contra String   @db.VarChar(255)
-  rol    String   @db.VarChar(20)
+  // Formato: recurso:accion, ej. 'escuelas:read', 'empleados:write'
+  nombre String   @unique @db.VarChar(50)
+  desc   String?  @db.Text
   activo Boolean  @default(true)
   fCre   DateTime @default(now())
   fMod   DateTime @updatedAt
 
-  @@map("usuarios_supervisor")
+  roles RolPermisoUsuario[]
+
+  @@map("permisos_usuario")
 }
 
-model UsuarioDirector {
+model RolPermisoUsuario {
+  id        String   @id @default(uuid())
+  idRol     String
+  idPermiso String
+  fCre      DateTime @default(now())
+  fMod      DateTime @updatedAt
+
+  rol     RolUsuario     @relation(fields: [idRol],     references: [id])
+  permiso PermisoUsuario @relation(fields: [idPermiso], references: [id])
+
+  @@unique([idRol, idPermiso])
+  @@map("rol_permiso_usuario")
+}
+
+// Tabla unificada de usuarios
+
+model Usuario {
   id     String   @id @default(uuid())
-  idEsc  String
+  idRol  String
+  // Opcional: solo requerido si el rol tiene requiereEscuela = true
+  idEsc  String?
   nombre String   @db.VarChar(100)
   correo String   @unique @db.VarChar(100)
   contra String   @db.VarChar(255)
@@ -30,10 +67,13 @@ model UsuarioDirector {
   fCre   DateTime @default(now())
   fMod   DateTime @updatedAt
 
-  escuela Escuela @relation(fields: [idEsc], references: [id])
+  rol     RolUsuario @relation(fields: [idRol], references: [id])
+  escuela Escuela?   @relation(fields: [idEsc], references: [id])
 
-  @@map("usuarios_director")
+  @@map("usuarios")
 }
+
+// Escuelas
 
 model Escuela {
   id           String   @id @default(uuid())
@@ -52,15 +92,17 @@ model Escuela {
   fCre         DateTime @default(now())
   fMod         DateTime @updatedAt
 
-  directores UsuarioDirector[]
-  ciclos     Ciclo[]
-  turnos     Turno[]
-  grupos     Grupo[]
-  empleados  Empleado[]
-  plazas     Plaza[]
+  usuarios  Usuario[]
+  ciclos    Ciclo[]
+  turnos    Turno[]
+  grupos    Grupo[]
+  empleados Empleado[]
+  plazas    Plaza[]
 
   @@map("escuelas")
 }
+
+// Ciclos escolares
 
 model Ciclo {
   id      String   @id @default(uuid())
@@ -73,14 +115,16 @@ model Ciclo {
   fCre    DateTime @default(now())
   fMod    DateTime @updatedAt
 
-  plan         PlanEstudios       @relation(fields: [idPlan], references: [id])
-  escuela      Escuela            @relation(fields: [idEsc], references: [id])
+  plan         PlanEstudios         @relation(fields: [idPlan], references: [id])
+  escuela      Escuela              @relation(fields: [idEsc],  references: [id])
   estadisticas EstadisticaAlumnos[]
   padrones     Padron[]
 
   @@unique([nombre, idEsc])
   @@map("ciclos")
 }
+
+// Turnos
 
 model Turno {
   id      String   @id @default(uuid())
@@ -99,6 +143,8 @@ model Turno {
   @@map("turnos")
 }
 
+// Plan de estudios
+
 model PlanEstudios {
   id      String   @id @default(uuid())
   nombre  String   @db.VarChar(20)
@@ -113,6 +159,8 @@ model PlanEstudios {
 
   @@map("plan_estudios")
 }
+
+// Grados
 
 model Grado {
   id      String   @id @default(uuid())
@@ -131,6 +179,8 @@ model Grado {
   @@map("grados")
 }
 
+// Materias
+
 model Materia {
   id      String   @id @default(uuid())
   idPlan  String
@@ -145,8 +195,11 @@ model Materia {
   plazas       Plaza[]
   horarioSlots HorarioSlot[]
 
+  @@unique([nombre, idPlan])
   @@map("materias")
 }
+
+// Relacion materias-grados
 
 model MateriaGrado {
   id        String   @id @default(uuid())
@@ -157,11 +210,13 @@ model MateriaGrado {
   fMod      DateTime @updatedAt
 
   materia Materia @relation(fields: [idMateria], references: [id])
-  grado   Grado   @relation(fields: [idGrado], references: [id])
+  grado   Grado   @relation(fields: [idGrado],   references: [id])
 
   @@unique([idMateria, idGrado])
   @@map("materia_grado")
 }
+
+// Grupos
 
 model Grupo {
   id      String   @id @default(uuid())
@@ -173,9 +228,9 @@ model Grupo {
   fCre    DateTime @default(now())
   fMod    DateTime @updatedAt
 
-  escuela      Escuela            @relation(fields: [idEsc], references: [id])
-  grado        Grado              @relation(fields: [idGrado], references: [id])
-  turno        Turno              @relation(fields: [idTurno], references: [id])
+  escuela      Escuela              @relation(fields: [idEsc],   references: [id])
+  grado        Grado                @relation(fields: [idGrado], references: [id])
+  turno        Turno                @relation(fields: [idTurno], references: [id])
   plazaGrupos  PlazaGrupo[]
   horarioSlots HorarioSlot[]
   estadisticas EstadisticaAlumnos[]
@@ -183,6 +238,8 @@ model Grupo {
   @@unique([nombre, idGrado, idTurno, idEsc])
   @@map("grupos")
 }
+
+// Personas
 
 model Persona {
   id      String   @id @default(uuid())
@@ -199,6 +256,8 @@ model Persona {
 
   @@map("personas")
 }
+
+// Direccion de persona
 
 model PersonaDirec {
   id        String   @id @default(uuid())
@@ -220,6 +279,8 @@ model PersonaDirec {
   @@map("persona_direc")
 }
 
+// Contacto de persona
+
 model PersonaContact {
   id        String   @id @default(uuid())
   idPersona String   @unique
@@ -234,6 +295,8 @@ model PersonaContact {
 
   @@map("persona_contact")
 }
+
+// Empleados
 
 model Empleado {
   id          String   @id @default(uuid())
@@ -250,7 +313,7 @@ model Empleado {
   fMod        DateTime @updatedAt
 
   persona           Persona          @relation(fields: [idPersona], references: [id])
-  escuela           Escuela          @relation(fields: [idEsc], references: [id])
+  escuela           Escuela          @relation(fields: [idEsc],     references: [id])
   preparacion       PreparacionProf?
   roles             EmpleadoRol[]
   plazas            Plaza[]
@@ -261,6 +324,8 @@ model Empleado {
 
   @@map("empleados")
 }
+
+// Coberturas
 
 model Cobertura {
   id                String    @id @default(uuid())
@@ -281,6 +346,8 @@ model Cobertura {
   @@map("coberturas")
 }
 
+// Roles laborales de empleados (catalogo, no confundir con roles_usuario)
+
 model RolEmpleado {
   id      String   @id @default(uuid())
   nombre  String   @unique @db.VarChar(25)
@@ -293,6 +360,8 @@ model RolEmpleado {
 
   @@map("roles_empleado")
 }
+
+// Asignacion de roles laborales a empleados
 
 model EmpleadoRol {
   id         String    @id @default(uuid())
@@ -310,6 +379,8 @@ model EmpleadoRol {
   @@unique([idEmpleado, idRol, fInicio])
   @@map("empleado_rol")
 }
+
+// Preparacion profesional
 
 model PreparacionProf {
   id             String   @id @default(uuid())
@@ -329,6 +400,8 @@ model PreparacionProf {
   @@map("preparacion_prof")
 }
 
+// Nombramientos
+
 model Nombramiento {
   id      String   @id @default(uuid())
   nombre  String   @unique @db.VarChar(100)
@@ -340,6 +413,8 @@ model Nombramiento {
 
   @@map("nombramientos")
 }
+
+// Plazas laborales
 
 model Plaza {
   id             String   @id @default(uuid())
@@ -367,6 +442,8 @@ model Plaza {
   @@map("plazas")
 }
 
+// Grupos atendidos por plaza
+
 model PlazaGrupo {
   id      String   @id @default(uuid())
   idPlaza String
@@ -381,6 +458,8 @@ model PlazaGrupo {
   @@map("plaza_grupo")
 }
 
+// Trabajo externo
+
 model TrabajoExterno {
   id          String   @id @default(uuid())
   idEmpleado  String
@@ -394,6 +473,8 @@ model TrabajoExterno {
 
   @@map("trabajo_externo")
 }
+
+// Horarios
 
 model HorarioSlot {
   id         String   @id @default(uuid())
@@ -414,8 +495,10 @@ model HorarioSlot {
   @@map("horario_slots")
 }
 
+// Estadistica de alumnos
+
 model EstadisticaAlumnos {
-  id      String   @id @default(uuid())
+  id      String @id @default(uuid())
   idCiclo String
   idGrupo String
 
@@ -444,6 +527,8 @@ model EstadisticaAlumnos {
   @@unique([idCiclo, idGrupo])
   @@map("estadistica_alumnos")
 }
+
+// Padron
 
 model Padron {
   id      String   @id @default(uuid())

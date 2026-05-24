@@ -3,31 +3,24 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC      = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_TITULAR  = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_SUPLENTE = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
-
 const empleadoBase = (id: string, numControl: string) => ({
   id,
-  idEsc:      UUID_ESC,
+  idEsc:       UUID_ESC,
   numControl,
-  activo:     true,
-  idPersona:  'uuid-persona',
-  rfc:        'TEST000000AAA',
-  curp:       'TEST000000HSLRPN01',
-  lugarNac:   null,
+  activo:      true,
+  idPersona:   'uuid-persona',
+  rfc:         'TEST000000AAA',
+  curp:        'TEST000000HSLRPN01',
+  lugarNac:    null,
   estadoCivil: null,
-  fIngreso:   new Date(),
-  fCre:       new Date(),
-  fMod:       new Date(),
+  fIngreso:    new Date(),
+  fCre:        new Date(),
+  fMod:        new Date(),
 });
 
 const coberturaBase = {
@@ -49,13 +42,13 @@ beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/coberturas', () => {
+describe('GET /api/coberturas', () => {
 
   it('debe retornar 200 con lista de coberturas', async () => {
     mockPrisma.cobertura.findMany.mockResolvedValue([coberturaBase] as any);
 
     const res = await request(app)
-      .get('/api/director/coberturas')
+      .get('/api/coberturas')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -63,18 +56,18 @@ describe('GET /api/director/coberturas', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/coberturas');
+    const res = await request(app).get('/api/coberturas');
     expect(res.status).toBe(401);
   });
 });
 
-describe('GET /api/director/coberturas/:id', () => {
+describe('GET /api/coberturas/:id', () => {
 
   it('debe retornar 200 con la cobertura encontrada', async () => {
     mockPrisma.cobertura.findFirst.mockResolvedValue(coberturaBase as any);
 
     const res = await request(app)
-      .get('/api/director/coberturas/uuid-cobertura')
+      .get('/api/coberturas/uuid-cobertura')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -85,14 +78,14 @@ describe('GET /api/director/coberturas/:id', () => {
     mockPrisma.cobertura.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .get('/api/director/coberturas/uuid-inexistente')
+      .get('/api/coberturas/uuid-inexistente')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
   });
 });
 
-describe('POST /api/director/coberturas', () => {
+describe('POST /api/coberturas', () => {
 
   it('debe retornar 201 al abrir cobertura correctamente', async () => {
     mockPrisma.empleado.findFirst
@@ -103,7 +96,7 @@ describe('POST /api/director/coberturas', () => {
     mockPrisma.cobertura.create.mockResolvedValue(coberturaBase as any);
 
     const res = await request(app)
-      .post('/api/director/coberturas')
+      .post('/api/coberturas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idEmpleadoTitular: UUID_TITULAR,
@@ -122,7 +115,7 @@ describe('POST /api/director/coberturas', () => {
     mockPrisma.cobertura.findFirst.mockResolvedValue(coberturaBase as any);
 
     const res = await request(app)
-      .post('/api/director/coberturas')
+      .post('/api/coberturas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({
         idEmpleadoTitular: UUID_TITULAR,
@@ -135,7 +128,7 @@ describe('POST /api/director/coberturas', () => {
 
   it('debe retornar 400 si faltan campos requeridos', async () => {
     const res = await request(app)
-      .post('/api/director/coberturas')
+      .post('/api/coberturas')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ idEmpleadoTitular: UUID_TITULAR });
 
@@ -143,7 +136,7 @@ describe('POST /api/director/coberturas', () => {
   });
 });
 
-describe('PUT /api/director/coberturas/:id/cerrar', () => {
+describe('PUT /api/coberturas/:id/cerrar', () => {
 
   it('debe retornar 200 al cerrar cobertura correctamente', async () => {
     mockPrisma.cobertura.findFirst.mockResolvedValue({
@@ -158,7 +151,7 @@ describe('PUT /api/director/coberturas/:id/cerrar', () => {
     } as any);
 
     const res = await request(app)
-      .put('/api/director/coberturas/uuid-cobertura/cerrar')
+      .put('/api/coberturas/uuid-cobertura/cerrar')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -169,7 +162,7 @@ describe('PUT /api/director/coberturas/:id/cerrar', () => {
     mockPrisma.cobertura.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .put('/api/director/coberturas/uuid-inexistente/cerrar')
+      .put('/api/coberturas/uuid-inexistente/cerrar')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(404);
@@ -183,7 +176,7 @@ describe('PUT /api/director/coberturas/:id/cerrar', () => {
     } as any);
 
     const res = await request(app)
-      .put('/api/director/coberturas/uuid-cobertura/cerrar')
+      .put('/api/coberturas/uuid-cobertura/cerrar')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(409);

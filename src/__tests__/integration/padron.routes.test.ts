@@ -3,22 +3,9 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import jwt from 'jsonwebtoken';
+import { tokenAdmin, tokenDirector, UUID_ESC } from './setup';
 
-const UUID_ESC   = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 const UUID_CICLO = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
-const tokenDirector = () => jwt.sign(
-  { id: 'uuid-director', rol: 'director', idEsc: UUID_ESC },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
-
-const tokenAdmin = () => jwt.sign(
-  { id: 'uuid-admin', rol: 'admin' },
-  process.env.JWT_SECRET!,
-  { expiresIn: '1h' }
-);
 
 const padronBase = {
   id:      'uuid-padron',
@@ -30,44 +17,17 @@ const padronBase = {
   ciclo:   { id: UUID_CICLO, nombre: '2024-2025' },
 };
 
-const escuelaBase = {
-  id:          UUID_ESC,
-  nombre:      'Secundaria Test',
-  clave:       'SIN0001',
-  zonaEscolar: 'Z001',
-  nivel:       'Secundaria',
-  activo:      true,
-  turnos:      [],
-  fCre:        new Date(),
-  fMod:        new Date(),
-};
-
-const cicloBase = {
-  id:      UUID_CICLO,
-  idEsc:   UUID_ESC,
-  nombre:  '2024-2025',
-  activo:  true,
-  fInicio: new Date(),
-  fFin:    new Date(),
-  fCre:    new Date(),
-  fMod:    new Date(),
-  plan: {
-    materias: [],
-    grados:   [],
-  },
-};
-
 beforeEach(() => {
   mockReset(mockPrisma);
 });
 
-describe('GET /api/director/padron/historial', () => {
+describe('GET /api/padron/historial', () => {
 
-  it('debe retornar 200 con historial de padrones', async () => {
+  it('debe retornar 200 con historial de padrones para director', async () => {
     mockPrisma.padron.findMany.mockResolvedValue([padronBase] as any);
 
     const res = await request(app)
-      .get('/api/director/padron/historial')
+      .get('/api/padron/historial')
       .set('Authorization', `Bearer ${tokenDirector()}`);
 
     expect(res.status).toBe(200);
@@ -76,23 +36,24 @@ describe('GET /api/director/padron/historial', () => {
   });
 
   it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/director/padron/historial');
+    const res = await request(app).get('/api/padron/historial');
     expect(res.status).toBe(401);
   });
 
-  it('debe retornar 403 con token de supervisor', async () => {
+  it('debe retornar 403 para admin sin idEsc', async () => {
     const res = await request(app)
-      .get('/api/director/padron/historial')
+      .get('/api/padron/historial')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
+
     expect(res.status).toBe(403);
   });
 });
 
-describe('POST /api/director/padron/generar', () => {
+describe('POST /api/padron/generar', () => {
 
   it('debe retornar 400 si falta idCiclo', async () => {
     const res = await request(app)
-      .post('/api/director/padron/generar')
+      .post('/api/padron/generar')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({});
 
@@ -101,7 +62,7 @@ describe('POST /api/director/padron/generar', () => {
 
   it('debe retornar 400 si idCiclo no es UUID valido', async () => {
     const res = await request(app)
-      .post('/api/director/padron/generar')
+      .post('/api/padron/generar')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ idCiclo: 'no-es-uuid' });
 
@@ -113,7 +74,7 @@ describe('POST /api/director/padron/generar', () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
-      .post('/api/director/padron/generar')
+      .post('/api/padron/generar')
       .set('Authorization', `Bearer ${tokenDirector()}`)
       .send({ idCiclo: UUID_CICLO });
 
@@ -122,7 +83,7 @@ describe('POST /api/director/padron/generar', () => {
 
   it('debe retornar 401 sin token', async () => {
     const res = await request(app)
-      .post('/api/director/padron/generar')
+      .post('/api/padron/generar')
       .send({ idCiclo: UUID_CICLO });
 
     expect(res.status).toBe(401);

@@ -1,12 +1,11 @@
 import { Router } from 'express';
 import { RolEmpleadoController } from './rol-empleado.controller';
 import { authMiddleware } from '../../middleware/auth.middleware';
+import { requirePermission } from '../../lib/rbac';
 
 const router = Router();
 
-router.use(authMiddleware);
-
-router.get('/',    RolEmpleadoController.getAll);
-router.get('/:id', RolEmpleadoController.getById);
+router.get('/',    authMiddleware, requirePermission('catalogos:read'), RolEmpleadoController.getAll);
+router.get('/:id', authMiddleware, requirePermission('catalogos:read'), RolEmpleadoController.getById);
 
 export default router;

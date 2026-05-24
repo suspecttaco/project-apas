@@ -20,7 +20,7 @@ const escuelaBase = {
   activo:       true,
   fCre:         new Date(),
   fMod:         new Date(),
-  directores:   [],
+  usuarios:     [],
 };
 
 beforeEach(() => {
@@ -61,9 +61,8 @@ describe('EscuelaService', () => {
   });
 
   describe('create', () => {
-    it('debe crear la escuela y el usuario director correctamente', async () => {
+    it('debe crear la escuela correctamente', async () => {
       mockPrisma.escuela.findFirst.mockResolvedValue(null);
-      mockPrisma.usuarioDirector.findFirst.mockResolvedValue(null);
       mockPrisma.escuela.create.mockResolvedValue(escuelaBase);
 
       const result = await EscuelaService.create({
@@ -71,11 +70,6 @@ describe('EscuelaService', () => {
         clave:       'SIN0001',
         zonaEscolar: 'Z001',
         nivel:       'Secundaria',
-        director: {
-          nombre: 'Juan Perez',
-          correo: 'director@escuela.mx',
-          contra: 'director123',
-        },
       });
 
       expect(mockPrisma.escuela.create).toHaveBeenCalledOnce();
@@ -91,33 +85,6 @@ describe('EscuelaService', () => {
           clave:       'SIN0001',
           zonaEscolar: 'Z001',
           nivel:       'Secundaria',
-          director: {
-            nombre: 'Director',
-            correo: 'director2@escuela.mx',
-            contra: 'director123',
-          },
-        })
-      ).rejects.toThrow(ConflictError);
-    });
-
-    it('debe lanzar ConflictError si el correo del director ya existe', async () => {
-      mockPrisma.escuela.findFirst.mockResolvedValue(null);
-      mockPrisma.usuarioDirector.findFirst.mockResolvedValue({
-        id: 'uuid-director',
-        correo: 'director@escuela.mx',
-      } as any);
-
-      await expect(
-        EscuelaService.create({
-          nombre:      'Nueva Escuela',
-          clave:       'SIN0002',
-          zonaEscolar: 'Z001',
-          nivel:       'Secundaria',
-          director: {
-            nombre: 'Director',
-            correo: 'director@escuela.mx',
-            contra: 'director123',
-          },
         })
       ).rejects.toThrow(ConflictError);
     });

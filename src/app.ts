@@ -22,6 +22,9 @@ import plazaRoutes        from './modules/plaza/plaza.routes';
 import horarioRoutes      from './modules/horario/horario.routes';
 import estadisticaRoutes  from './modules/estadistica/estadistica.routes';
 import padronRoutes       from './modules/padron/padron.routes';
+import usuarioRoutes      from './modules/usuario/usuario.routes';
+import permisoRoutes      from './modules/permiso/permiso.routes';
+import rolRoutes          from './modules/rol/rol.routes';
 
 const app = express();
 
@@ -32,25 +35,41 @@ app.use(express.json());
 const spec = generateOpenApiSpec();
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec));
 
-app.use('/api/auth',               authRoutes);
-app.use('/api/supervisor/escuelas', escuelaRoutes);
-app.use('/api/plan-estudios',       planEstudiosRoutes);
-app.use('/api/grados',              gradoRoutes);
-app.use('/api/materias',            materiaRoutes);
-app.use('/api/nombramientos',       nombramientoRoutes);
-app.use('/api/roles-empleado',      rolEmpleadoRoutes);
-app.use('/api/director/ciclos',     cicloRoutes);
-app.use('/api/director/turnos',     turnoRoutes);
-app.use('/api/director/grupos',     grupoRoutes);
-app.use('/api/director/empleados',  empleadoRoutes);
-app.use('/api/director/coberturas', coberturaRoutes);
-app.use('/api/director/plazas',    plazaRoutes);
-app.use('/api/director/horarios',      horarioRoutes);
-app.use('/api/director/estadisticas',  estadisticaRoutes);
-app.use('/api/director/padron',        padronRoutes);
+// Auth — un solo endpoint para todos los usuarios
+app.use('/api/auth', authRoutes);
+
+// Gestion de escuelas — admin y supervisor
+app.use('/api/escuelas', escuelaRoutes);
+
+// Catalogos de solo lectura
+app.use('/api/plan-estudios', planEstudiosRoutes);
+app.use('/api/grados',        gradoRoutes);
+app.use('/api/materias',      materiaRoutes);
+app.use('/api/nombramientos', nombramientoRoutes);
+app.use('/api/roles-empleado', rolEmpleadoRoutes);
+
+// Recursos de escuela — director y supervisor
+app.use('/api/ciclos',       cicloRoutes);
+app.use('/api/turnos',       turnoRoutes);
+app.use('/api/grupos',       grupoRoutes);
+app.use('/api/empleados',    empleadoRoutes);
+app.use('/api/coberturas',   coberturaRoutes);
+app.use('/api/plazas',       plazaRoutes);
+app.use('/api/horarios',     horarioRoutes);
+app.use('/api/estadisticas', estadisticaRoutes);
+app.use('/api/padron',       padronRoutes);
+
+// Permisos
+app.use('/api/permisos', permisoRoutes);
+
+// Roles
+app.use('/api/roles', rolRoutes);
+
+// Usuarios
+app.use('/api/usuarios', usuarioRoutes);
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.use(errorMiddleware);
