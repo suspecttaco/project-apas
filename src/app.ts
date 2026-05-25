@@ -27,9 +27,14 @@ import permisoRoutes      from './modules/permiso/permiso.routes';
 import rolRoutes          from './modules/rol/rol.routes';
 
 const app = express();
+const origenes = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) ?? [];
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: origenes,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 const spec = generateOpenApiSpec();
