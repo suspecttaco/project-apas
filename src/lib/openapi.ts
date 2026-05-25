@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { OpenApiGeneratorV3, OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { LoginSchema, TokenResponseSchema } from '../modules/auth/auth.schema';
 import { CreateEscuelaSchema, UpdateEscuelaSchema, EscuelaResponseSchema } from '../modules/escuela/escuela.schema';
-import { PlanEstudiosResponseSchema } from '../modules/plan-estudios/plan-estudios.schema';
-import { GradoResponseSchema }        from '../modules/grado/grado.schema';
-import { MateriaResponseSchema }       from '../modules/materia/materia.schema';
-import { NombramientoResponseSchema }  from '../modules/nombramiento/nombramiento.schema';
-import { RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
+import { CreatePlanEstudiosSchema, UpdatePlanEstudiosSchema, PlanEstudiosResponseSchema } from '../modules/plan-estudios/plan-estudios.schema';
+import { CreateGradoSchema, UpdateGradoSchema, GradoResponseSchema }        from '../modules/grado/grado.schema';
+import { CreateMateriaSchema, UpdateMateriaSchema, MateriaResponseSchema }   from '../modules/materia/materia.schema';
+import { CreateNombramientoSchema, UpdateNombramientoSchema, NombramientoResponseSchema }  from '../modules/nombramiento/nombramiento.schema';
+import { CreateRolEmpleadoSchema, UpdateRolEmpleadoSchema, RolEmpleadoResponseSchema }   from '../modules/rol-empleado/rol-empleado.schema';
 import { CreateCicloSchema, UpdateCicloSchema, CicloResponseSchema } from '../modules/ciclo/ciclo.schema';
 import { CreateTurnoSchema, UpdateTurnoSchema, TurnoResponseSchema } from '../modules/turno/turno.schema';
 import { CreateGrupoSchema, UpdateGrupoSchema, GrupoResponseSchema }       from '../modules/grupo/grupo.schema';
@@ -171,7 +171,7 @@ registry.registerPath({
 // Padron
 registry.registerPath({
   method:   'post',
-  path:     '/director/padron/generar',
+  path:     '/padron/generar',
   tags:     ['Padron'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: GenerarPadronSchema } } } },
@@ -182,7 +182,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/padron/historial',
+  path:     '/padron/historial',
   tags:     ['Padron'],
   security: [{ bearerAuth: [] }],
   responses: {
@@ -193,14 +193,14 @@ registry.registerPath({
 // Estadisticas
 registry.registerPath({
   method:   'get',
-  path:     '/director/estadisticas',
+  path:     '/estadisticas',
   tags:     ['Estadisticas'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de estadisticas', content: { 'application/json': { schema: EstadisticaResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/estadisticas/{id}',
+  path:     '/estadisticas/{id}',
   tags:     ['Estadisticas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -211,7 +211,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/estadisticas/{id}',
+  path:     '/estadisticas/{id}',
   tags:     ['Estadisticas'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -227,7 +227,7 @@ registry.registerPath({
 // Horarios
 registry.registerPath({
   method:   'get',
-  path:     '/director/horarios/empleado/{idEmpleado}',
+  path:     '/horarios/empleado/{idEmpleado}',
   tags:     ['Horarios'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ idEmpleado: z.string() }) },
@@ -238,7 +238,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/horarios/grupo/{idGrupo}',
+  path:     '/horarios/grupo/{idGrupo}',
   tags:     ['Horarios'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ idGrupo: z.string() }) },
@@ -249,7 +249,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/horarios',
+  path:     '/horarios',
   tags:     ['Horarios'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateHorarioSlotSchema } } } },
@@ -260,7 +260,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/horarios/{id}',
+  path:     '/horarios/{id}',
   tags:     ['Horarios'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -273,14 +273,14 @@ registry.registerPath({
 // Plazas
 registry.registerPath({
   method:   'get',
-  path:     '/director/plazas',
+  path:     '/plazas',
   tags:     ['Plazas'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de plazas', content: { 'application/json': { schema: PlazaResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/plazas/{id}',
+  path:     '/plazas/{id}',
   tags:     ['Plazas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -291,7 +291,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/plazas',
+  path:     '/plazas',
   tags:     ['Plazas'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreatePlazaSchema } } } },
@@ -302,7 +302,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/plazas/{id}',
+  path:     '/plazas/{id}',
   tags:     ['Plazas'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -316,7 +316,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/plazas/{id}',
+  path:     '/plazas/{id}',
   tags:     ['Plazas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -329,14 +329,14 @@ registry.registerPath({
 // Coberturas
 registry.registerPath({
   method:   'get',
-  path:     '/director/coberturas',
+  path:     '/coberturas',
   tags:     ['Coberturas'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de coberturas', content: { 'application/json': { schema: CoberturaResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/coberturas/{id}',
+  path:     '/coberturas/{id}',
   tags:     ['Coberturas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -347,7 +347,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/coberturas',
+  path:     '/coberturas',
   tags:     ['Coberturas'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateCoberturaSchema } } } },
@@ -358,7 +358,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/coberturas/{id}/cerrar',
+  path:     '/coberturas/{id}/cerrar',
   tags:     ['Coberturas'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -372,14 +372,14 @@ registry.registerPath({
 // Empleados
 registry.registerPath({
   method:   'get',
-  path:     '/director/empleados',
+  path:     '/empleados',
   tags:     ['Empleados'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de empleados', content: { 'application/json': { schema: EmpleadoResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/empleados/{id}',
+  path:     '/empleados/{id}',
   tags:     ['Empleados'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -390,7 +390,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/empleados',
+  path:     '/empleados',
   tags:     ['Empleados'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateEmpleadoSchema } } } },
@@ -401,7 +401,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/empleados/{id}',
+  path:     '/empleados/{id}',
   tags:     ['Empleados'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -415,7 +415,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/empleados/{id}',
+  path:     '/empleados/{id}',
   tags:     ['Empleados'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -428,14 +428,14 @@ registry.registerPath({
 // Grupos
 registry.registerPath({
   method:   'get',
-  path:     '/director/grupos',
+  path:     '/grupos',
   tags:     ['Grupos'],
   security: [{ bearerAuth: [] }],
   responses: { 200: { description: 'Lista de grupos', content: { 'application/json': { schema: GrupoResponseSchema } } } },
 });
 registry.registerPath({
   method:   'get',
-  path:     '/director/grupos/{id}',
+  path:     '/grupos/{id}',
   tags:     ['Grupos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -446,7 +446,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'post',
-  path:     '/director/grupos',
+  path:     '/grupos',
   tags:     ['Grupos'],
   security: [{ bearerAuth: [] }],
   request:  { body: { content: { 'application/json': { schema: CreateGrupoSchema } } } },
@@ -457,7 +457,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'put',
-  path:     '/director/grupos/{id}',
+  path:     '/grupos/{id}',
   tags:     ['Grupos'],
   security: [{ bearerAuth: [] }],
   request:  {
@@ -471,7 +471,7 @@ registry.registerPath({
 });
 registry.registerPath({
   method:   'delete',
-  path:     '/director/grupos/{id}',
+  path:     '/grupos/{id}',
   tags:     ['Grupos'],
   security: [{ bearerAuth: [] }],
   request:  { params: z.object({ id: z.string() }) },
@@ -556,6 +556,55 @@ registry.registerPath({
     404: { description: 'Plan de estudios no encontrado' },
   },
 });
+registry.registerPath({
+  method:   'post',
+  path:     '/plan-estudios',
+  tags:     ['Plan de Estudios'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreatePlanEstudiosSchema } } } },
+  responses: {
+    201: { description: 'Plan creado', content: { 'application/json': { schema: PlanEstudiosResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/plan-estudios/{id}',
+  tags:     ['Plan de Estudios'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdatePlanEstudiosSchema } } },
+  },
+  responses: {
+    200: { description: 'Plan actualizado', content: { 'application/json': { schema: PlanEstudiosResponseSchema } } },
+    404: { description: 'Plan no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/plan-estudios/{id}',
+  tags:     ['Plan de Estudios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Plan eliminado' },
+    404: { description: 'Plan no encontrado' },
+    409: { description: 'Plan actual o con ciclos asociados' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/plan-estudios/{id}/activar',
+  tags:     ['Plan de Estudios'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    200: { description: 'Plan activado', content: { 'application/json': { schema: PlanEstudiosResponseSchema } } },
+    404: { description: 'Plan no encontrado' },
+    409: { description: 'Ya es el plan actual' },
+  },
+});
 
 // Grados
 registry.registerPath({
@@ -574,6 +623,43 @@ registry.registerPath({
   responses: {
     200: { description: 'Grado encontrado', content: { 'application/json': { schema: GradoResponseSchema } } },
     404: { description: 'Grado no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/grados',
+  tags:     ['Grados'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateGradoSchema } } } },
+  responses: {
+    201: { description: 'Grado creado', content: { 'application/json': { schema: GradoResponseSchema } } },
+    409: { description: 'Numero duplicado en el plan o plan actual' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/grados/{id}',
+  tags:     ['Grados'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateGradoSchema } } },
+  },
+  responses: {
+    200: { description: 'Grado actualizado', content: { 'application/json': { schema: GradoResponseSchema } } },
+    404: { description: 'Grado no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/grados/{id}',
+  tags:     ['Grados'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Grado eliminado' },
+    404: { description: 'Grado no encontrado' },
+    409: { description: 'Plan actual' },
   },
 });
 
@@ -596,6 +682,43 @@ registry.registerPath({
     404: { description: 'Materia no encontrada' },
   },
 });
+registry.registerPath({
+  method:   'post',
+  path:     '/materias',
+  tags:     ['Materias'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateMateriaSchema } } } },
+  responses: {
+    201: { description: 'Materia creada', content: { 'application/json': { schema: MateriaResponseSchema } } },
+    409: { description: 'Nombre duplicado en el plan o plan actual' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/materias/{id}',
+  tags:     ['Materias'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateMateriaSchema } } },
+  },
+  responses: {
+    200: { description: 'Materia actualizada', content: { 'application/json': { schema: MateriaResponseSchema } } },
+    404: { description: 'Materia no encontrada' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/materias/{id}',
+  tags:     ['Materias'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Materia eliminada' },
+    404: { description: 'Materia no encontrada' },
+    409: { description: 'Plan actual' },
+  },
+});
 
 // Nombramientos
 registry.registerPath({
@@ -616,6 +739,42 @@ registry.registerPath({
     404: { description: 'Nombramiento no encontrado' },
   },
 });
+registry.registerPath({
+  method:   'post',
+  path:     '/nombramientos',
+  tags:     ['Nombramientos'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateNombramientoSchema } } } },
+  responses: {
+    201: { description: 'Nombramiento creado', content: { 'application/json': { schema: NombramientoResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/nombramientos/{id}',
+  tags:     ['Nombramientos'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateNombramientoSchema } } },
+  },
+  responses: {
+    200: { description: 'Nombramiento actualizado', content: { 'application/json': { schema: NombramientoResponseSchema } } },
+    404: { description: 'Nombramiento no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/nombramientos/{id}',
+  tags:     ['Nombramientos'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Nombramiento eliminado' },
+    404: { description: 'Nombramiento no encontrado' },
+  },
+});
 
 // Roles de empleado
 registry.registerPath({
@@ -633,6 +792,42 @@ registry.registerPath({
   request:  { params: z.object({ id: z.string() }) },
   responses: {
     200: { description: 'Rol encontrado', content: { 'application/json': { schema: RolEmpleadoResponseSchema } } },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'post',
+  path:     '/roles-empleado',
+  tags:     ['Roles Empleado'],
+  security: [{ bearerAuth: [] }],
+  request:  { body: { content: { 'application/json': { schema: CreateRolEmpleadoSchema } } } },
+  responses: {
+    201: { description: 'Rol creado', content: { 'application/json': { schema: RolEmpleadoResponseSchema } } },
+    409: { description: 'Nombre duplicado' },
+  },
+});
+registry.registerPath({
+  method:   'put',
+  path:     '/roles-empleado/{id}',
+  tags:     ['Roles Empleado'],
+  security: [{ bearerAuth: [] }],
+  request:  {
+    params: z.object({ id: z.string() }),
+    body:   { content: { 'application/json': { schema: UpdateRolEmpleadoSchema } } },
+  },
+  responses: {
+    200: { description: 'Rol actualizado', content: { 'application/json': { schema: RolEmpleadoResponseSchema } } },
+    404: { description: 'Rol no encontrado' },
+  },
+});
+registry.registerPath({
+  method:   'delete',
+  path:     '/roles-empleado/{id}',
+  tags:     ['Roles Empleado'],
+  security: [{ bearerAuth: [] }],
+  request:  { params: z.object({ id: z.string() }) },
+  responses: {
+    204: { description: 'Rol eliminado' },
     404: { description: 'Rol no encontrado' },
   },
 });
