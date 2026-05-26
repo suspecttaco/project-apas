@@ -177,6 +177,7 @@ registry.registerPath({
   request:  { body: { content: { 'application/json': { schema: GenerarPadronSchema } } } },
   responses: {
     200: { description: 'PDF del padron generado (application/pdf)' },
+    400: { description: 'Falta idEsc en el body (requerido para admin y supervisor)' },
     404: { description: 'Ciclo o escuela no encontrados' },
   },
 });
@@ -185,8 +186,17 @@ registry.registerPath({
   path:     '/padron/historial',
   tags:     ['Padron'],
   security: [{ bearerAuth: [] }],
+  request: {
+    query: z.object({
+      idEsc: z.string().uuid().optional().openapi({
+        description: 'Requerido para admin y supervisor. El director lo toma del token.',
+        example: 'uuid-de-la-escuela',
+      }),
+    }),
+  },
   responses: {
     200: { description: 'Historial de padrones generados', content: { 'application/json': { schema: PadronResponseSchema } } },
+    400: { description: 'Falta idEsc para roles sin escuela asignada en token' },
   },
 });
 

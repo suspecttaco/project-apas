@@ -5,6 +5,8 @@ extendZodWithOpenApi(z);
 
 export const GenerarPadronSchema = z.object({
   idCiclo: z.string().uuid().openapi({ example: 'uuid-del-ciclo' }),
+  // Requerido para admin y supervisor. El director lo toma del token.
+  idEsc:   z.string().uuid().optional().openapi({ example: 'uuid-de-la-escuela' }),
 }).openapi('GenerarPadron');
 
 export const PadronResponseSchema = z.object({

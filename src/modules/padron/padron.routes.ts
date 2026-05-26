@@ -6,7 +6,17 @@ import { requirePermission } from '../../lib/rbac';
 
 const router = Router();
 
-router.post('/generar',  authMiddleware, escuelaMiddleware, requirePermission('padron:generate'), PadronController.generar);
-router.get('/historial', authMiddleware, escuelaMiddleware, requirePermission('padron:read'),     PadronController.historial);
+// escuelaMiddleware solo en director — admin y supervisor proveen idEsc en body/query
+router.post('/generar',
+  authMiddleware,
+  requirePermission('padron:generate'),
+  PadronController.generar,
+);
+
+router.get('/historial',
+  authMiddleware,
+  requirePermission('padron:read'),
+  PadronController.historial,
+);
 
 export default router;
