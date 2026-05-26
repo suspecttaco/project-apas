@@ -66,6 +66,7 @@ Monolito modular MVC con las siguientes decisiones de diseño:
 - **UUIDs como PKs** — generados por Prisma con `@default(uuid())`
 - **PDF sin persistencia** — generado en backend y entregado como `Buffer`, no se guarda en disco
 - **Swagger desde Zod** — los schemas de validación se reutilizan como especificación OpenAPI
+- **Sesión validada en BD** — cada request autenticado verifica que el usuario sigue activo y reconstruye `req.user` desde BD, permitiendo reflejar cambios de rol o escuela sin necesidad de renovar el token
 
 ---
 
@@ -85,10 +86,12 @@ Monolito modular MVC con las siguientes decisiones de diseño:
 │   ├── lib/
 │   │   ├── db.ts              # PrismaClient singleton + helper whereEsc()
 │   │   ├── errors.ts          # NotFoundError, ConflictError, ValidationError, UnauthorizedError
+│   │   ├── permissions.ts     # Cache de permisos por rol (cargado al arrancar)
+│   │   ├── rbac.ts            # Middleware requirePermission()
 │   │   └── openapi.ts         # Registry OpenAPI con todos los paths
 │   ├── middleware/
-│   │   ├── auth.middleware.ts      # Verificación JWT
-│   │   ├── escuela.middleware.ts   # escuelaMiddleware + supervisorMiddleware
+│   │   ├── auth.middleware.ts      # Verificación JWT + validación activo en BD
+│   │   ├── escuela.middleware.ts   # Verifica que req.user tenga idEsc
 │   │   └── error.middleware.ts     # Handler global de errores
 │   ├── modules/
 │   │   ├── auth/
@@ -104,15 +107,19 @@ Monolito modular MVC con las siguientes decisiones de diseño:
 │   │   ├── nombramiento/
 │   │   ├── padron/
 │   │   │   └── templates/     # hoja1.ts – hoja7.ts, estilos.ts, encabezado.ts, tipos.ts
+│   │   ├── permiso/
 │   │   ├── plan-estudios/
 │   │   ├── plaza/
+│   │   ├── rol/
 │   │   ├── rol-empleado/
-│   │   └── turno/
+│   │   ├── turno/
+│   │   └── usuario/
 │   └── __tests__/
 │       ├── mocks/
-│       │   └── prisma.mock.ts # Mock global de PrismaClient
-│       ├── unit/services/     # 101 tests unitarios de servicios
-│       └── integration/       # 132 tests de integración (rutas HTTP)
+│       │   ├── prisma.mock.ts       # Mock global de PrismaClient
+│       │   └── permissions.mock.ts  # Mock del cache de permisos por rol
+│       ├── unit/services/           # Tests unitarios de servicios
+│       └── integration/             # Tests de integración (rutas HTTP)
 ├── vitest.config.ts
 └── tsconfig.json
 ```
@@ -124,8 +131,10 @@ Cada módulo sigue la estructura: `nombre.controller.ts` / `nombre.routes.ts` / 
 ## Modelos de Base de Datos
 
 ```
-usuarios_supervisor   — Supervisores SEPyC
-usuarios_director     — Directores por escuela
+roles_usuario         — Roles de acceso al sistema (admin, supervisor, director)
+permisos_usuario      — Permisos individuales (recurso:accion)
+rol_permiso_usuario   — Asignación de permisos a roles (N:M)
+usuarios              — Tabla unificada de usuarios del sistema
 escuelas              — Escuelas secundarias
 ciclos                — Ciclos escolares (uno activo a la vez)
 turnos                — Turnos de la escuela (matutino, vespertino, etc.)
@@ -139,7 +148,7 @@ persona_direc         — Dirección de la persona (1:1)
 persona_contact       — Contacto de la persona (1:1)
 empleados             — Empleados de la escuela
 coberturas            — Suplencias temporales
-roles_empleado        — Catálogo de roles (Director, Docente, etc.)
+roles_empleado        — Catálogo de roles laborales (Director, Docente, etc.)
 empleado_rol          — Asignación de roles a empleados
 preparacion_prof      — Preparación académica del empleado
 nombramientos         — Catálogo de nombramientos oficiales
@@ -155,95 +164,142 @@ padrones              — Historial de generaciones del padrón
 
 ## Módulos y Endpoints
 
-### Panel Supervisor
+### Autenticación
 
 ```
-POST   /api/auth/supervisor/login
-GET    /api/supervisor/escuelas
-GET    /api/supervisor/escuelas/:id
-POST   /api/supervisor/escuelas
-PUT    /api/supervisor/escuelas/:id
-DELETE /api/supervisor/escuelas/:id
+POST   /api/auth/login
 ```
 
-### Panel Director
+### Panel Supervisor / Admin
 
 ```
-POST   /api/auth/director/login
+GET    /api/escuelas
+GET    /api/escuelas/:id
+POST   /api/escuelas
+PUT    /api/escuelas/:id
+DELETE /api/escuelas/:id
 
-GET    /api/director/ciclos
-GET    /api/director/ciclos/:id
-POST   /api/director/ciclos
-PUT    /api/director/ciclos/:id
-DELETE /api/director/ciclos/:id
-PUT    /api/director/ciclos/:id/activar
+GET    /api/usuarios
+GET    /api/usuarios/:id
+POST   /api/usuarios
+PUT    /api/usuarios/:id
+DELETE /api/usuarios/:id
 
-GET    /api/director/turnos
-GET    /api/director/turnos/:id
-POST   /api/director/turnos
-PUT    /api/director/turnos/:id
-DELETE /api/director/turnos/:id
+GET    /api/roles
+GET    /api/roles/:id
+POST   /api/roles
+PUT    /api/roles/:id
+PUT    /api/roles/:id/permisos
+DELETE /api/roles/:id
+POST   /api/roles/recargar
 
-GET    /api/director/grupos
-GET    /api/director/grupos/:id
-POST   /api/director/grupos
-PUT    /api/director/grupos/:id
-DELETE /api/director/grupos/:id
-
-GET    /api/director/empleados
-GET    /api/director/empleados/:id
-POST   /api/director/empleados
-PUT    /api/director/empleados/:id
-DELETE /api/director/empleados/:id
-
-GET    /api/director/coberturas
-GET    /api/director/coberturas/:id
-POST   /api/director/coberturas
-PUT    /api/director/coberturas/:id/cerrar
-
-GET    /api/director/plazas
-GET    /api/director/plazas/:id
-POST   /api/director/plazas
-PUT    /api/director/plazas/:id
-DELETE /api/director/plazas/:id
-
-GET    /api/director/horarios/empleado/:idEmpleado
-GET    /api/director/horarios/grupo/:idGrupo
-POST   /api/director/horarios
-DELETE /api/director/horarios/:id
-
-GET    /api/director/estadisticas
-GET    /api/director/estadisticas/:id
-PUT    /api/director/estadisticas/:id
-
-POST   /api/director/padron/generar
-GET    /api/director/padron/historial
+GET    /api/permisos
+GET    /api/permisos/:id
 ```
 
-### Datos de Solo Lectura (autenticado, cualquier rol)
+### Panel Director (y Supervisor con idEsc)
 
 ```
-GET /api/plan-estudios
-GET /api/plan-estudios/:id
-GET /api/grados
-GET /api/grados/:id
-GET /api/materias
-GET /api/materias/:id
-GET /api/nombramientos
-GET /api/nombramientos/:id
-GET /api/roles-empleado
-GET /api/roles-empleado/:id
+GET    /api/ciclos
+GET    /api/ciclos/:id
+POST   /api/ciclos
+PUT    /api/ciclos/:id
+DELETE /api/ciclos/:id
+PUT    /api/ciclos/:id/activar
+
+GET    /api/turnos
+GET    /api/turnos/:id
+POST   /api/turnos
+PUT    /api/turnos/:id
+DELETE /api/turnos/:id
+
+GET    /api/grupos
+GET    /api/grupos/:id
+POST   /api/grupos
+PUT    /api/grupos/:id
+DELETE /api/grupos/:id
+
+GET    /api/empleados
+GET    /api/empleados/:id
+POST   /api/empleados
+PUT    /api/empleados/:id
+DELETE /api/empleados/:id
+
+GET    /api/coberturas
+GET    /api/coberturas/:id
+POST   /api/coberturas
+PUT    /api/coberturas/:id/cerrar
+
+GET    /api/plazas
+GET    /api/plazas/:id
+POST   /api/plazas
+PUT    /api/plazas/:id
+DELETE /api/plazas/:id
+
+GET    /api/horarios/empleado/:idEmpleado
+GET    /api/horarios/grupo/:idGrupo
+POST   /api/horarios
+DELETE /api/horarios/:id
+
+GET    /api/estadisticas
+GET    /api/estadisticas/:id
+PUT    /api/estadisticas/:id
+
+POST   /api/padron/generar
+GET    /api/padron/historial
+```
+
+### Catálogos (autenticado, cualquier rol)
+
+```
+GET    /api/plan-estudios
+GET    /api/plan-estudios/:id
+GET    /api/grados
+GET    /api/grados/:id
+GET    /api/materias
+GET    /api/materias/:id
+GET    /api/nombramientos
+GET    /api/nombramientos/:id
+GET    /api/roles-empleado
+GET    /api/roles-empleado/:id
+```
+
+### Catálogos — escritura (admin y supervisor)
+
+```
+POST   /api/plan-estudios
+PUT    /api/plan-estudios/:id
+DELETE /api/plan-estudios/:id
+PUT    /api/plan-estudios/:id/activar
+
+POST   /api/grados
+PUT    /api/grados/:id
+DELETE /api/grados/:id
+
+POST   /api/materias
+PUT    /api/materias/:id
+DELETE /api/materias/:id
+
+POST   /api/nombramientos
+PUT    /api/nombramientos/:id
+DELETE /api/nombramientos/:id
+
+POST   /api/roles-empleado
+PUT    /api/roles-empleado/:id
+DELETE /api/roles-empleado/:id
 ```
 
 ---
 
 ## Autenticación y Autorización
 
-El sistema tiene dos tipos de usuario:
+El sistema usa un modelo RBAC con tres roles principales:
 
-**Supervisor** (`rol: 'admin'` o `'supervisor'`) — acceso al panel de escuelas vía `supervisorMiddleware`. El token no contiene `idEsc`.
-
-**Director** (`rol: 'director'`) — acceso al panel de su escuela vía `escuelaMiddleware`. El token contiene `idEsc` que se usa para filtrar todos los recursos.
+| Rol | Acceso |
+|---|---|
+| `admin` | Acceso total al sistema |
+| `supervisor` | Gestión de escuelas y su personal. Sin acceso a roles/permisos/usuarios |
+| `director` | Operaciones de su propia escuela. Catálogos en solo lectura |
 
 ```
 Authorization: Bearer <jwt>
@@ -251,12 +307,30 @@ Authorization: Bearer <jwt>
 
 El payload del JWT:
 ```json
-// Supervisor
-{ "id": "uuid", "rol": "admin" }
+// Admin / Supervisor
+{ "id": "uuid", "idRol": "uuid-rol" }
 
 // Director
-{ "id": "uuid", "rol": "director", "idEsc": "uuid-escuela" }
+{ "id": "uuid", "idRol": "uuid-rol", "idEsc": "uuid-escuela" }
 ```
+
+### Capas de seguridad
+
+1. **Firma JWT** — `authMiddleware` verifica la firma del token.
+2. **Usuario activo en BD** — en el mismo middleware, se consulta la BD para confirmar que el usuario sigue activo. Si fue desactivado, el token queda inválido de inmediato. `req.user` se reconstruye desde BD, por lo que cambios de rol o escuela se reflejan sin renovar el token.
+3. **Permisos RBAC** — `requirePermission('recurso:accion')` verifica contra el cache en memoria cargado al arrancar.
+4. **Escuela** — `escuelaMiddleware` verifica que `req.user.idEsc` exista para rutas que operan sobre una escuela específica.
+
+### Padrón y roles sin escuela en token
+
+Admin y supervisor no tienen `idEsc` en el token. Para endpoints que requieren contexto de escuela (`/padron/generar`, `/padron/historial`) deben proveerlo explícitamente:
+
+```
+POST /api/padron/generar   → body:        { idCiclo, idEsc }
+GET  /api/padron/historial → query param: ?idEsc=uuid
+```
+
+El director no necesita enviarlo — se toma automáticamente del token.
 
 ---
 
@@ -264,7 +338,7 @@ El payload del JWT:
 
 ### Numeración de Control de Empleados
 - El director siempre tiene `numControl = "1"`
-- Los empleados regulares se numeran desde `"2"` en adelante (count activos + 2)
+- Los empleados regulares se numeran desde `"2"` en adelante
 - Las coberturas usan el formato `"X.N"` donde X es el numControl del titular y N el ordinal de cobertura activa (ej. `"1.1"`, `"1.2"`)
 
 ### Ciclos
@@ -297,6 +371,7 @@ Crear archivo `.env` en la raíz a partir del `.env.example` incluido en el repo
 - `JWT_EXPIRES_IN` — duración del token (ej. `8h`)
 - `ADMIN_NOMBRE`, `ADMIN_CORREO`, `ADMIN_CONTRA` — credenciales del usuario supervisor inicial
 - `NODE_ENV`, `PORT`
+- `PERMISOS_CRUD_ENABLED` — (`true`/`false`) habilita endpoints de escritura en `/api/permisos`
 
 ---
 
@@ -326,12 +401,12 @@ npm run seed:test
 ```
 
 El `seed:test` crea:
-- Escuela: **"Secundaria General de Prueba"** (clave `TEST001`)
-- Director: `director@test.mx` / `director123`
+- Escuela: **"Secundaria General No. 25 Lazaro Cardenas"** (clave `SIN0025X`)
+- Director: `director@sec25.edu.mx` / `director123`
 - Ciclo 2024-2025 activo
-- Turno Matutino
-- Grupos A para cada grado (1°, 2°, 3°)
-- Empleado director con plaza y estadísticas básicas
+- 2 turnos (Matutino y Vespertino)
+- 12 grupos (2 por grado por turno)
+- 15 empleados con plazas, horarios y estadísticas
 
 > ⚠️ El `seed:test` requiere que `npm run seed` ya haya corrido (necesita el Plan 2017).
 
@@ -369,14 +444,16 @@ npm run test:coverage # Tests con reporte de cobertura
 ```
 
 El mock de Prisma se inyecta globalmente via `vi.mock('../../lib/db', ...)` en `prisma.mock.ts`.
+El mock de permisos se inyecta via `permissions.mock.ts`, que replica los permisos reales del seed.
 
-### Estado actual: 233/233 tests pasando
+### Estado actual: 408/408 tests pasando
 
-**Tests unitarios (101)** — `src/__tests__/unit/services/`
+**Tests unitarios** — `src/__tests__/unit/services/`
 
 | Archivo | Tests |
 |---|---|
 | auth.service.test.ts | 5 |
+| catalogo.service.test.ts | 41 |
 | ciclo.service.test.ts | 9 |
 | cobertura.service.test.ts | 8 |
 | estadistica.service.test.ts | 7 |
@@ -385,15 +462,19 @@ El mock de Prisma se inyecta globalmente via `vi.mock('../../lib/db', ...)` en `
 | grupo.service.test.ts | 8 |
 | plaza.service.test.ts | 11 |
 | horario.service.test.ts | 10 |
-| escuela.service.test.ts | 10 |
+| escuela.service.test.ts | 9 |
+| permiso.service.test.ts | 11 |
 | readonly.service.test.ts | 15 |
+| rol.service.test.ts | 13 |
+| usuario.service.test.ts | 15 |
 
-**Tests de integración (132)** — `src/__tests__/integration/`
+**Tests de integración** — `src/__tests__/integration/`
 
 | Archivo | Tests |
 |---|---|
 | auth.routes.test.ts | 6 |
-| escuela.routes.test.ts | 12 |
+| auth.middleware.test.ts | 6 |
+| escuela.routes.test.ts | 13 |
 | ciclo.routes.test.ts | 14 |
 | turno.routes.test.ts | 12 |
 | grupo.routes.test.ts | 11 |
@@ -403,33 +484,39 @@ El mock de Prisma se inyecta globalmente via `vi.mock('../../lib/db', ...)` en `
 | horario.routes.test.ts | 10 |
 | estadistica.routes.test.ts | 7 |
 | readonly.routes.test.ts | 21 |
-| padron.routes.test.ts | 7 |
-
-**Cobertura global: ~73%**
-- Módulos de negocio principales: 90%+
-- `padron.service.ts`: ~26% (Puppeteer requiere navegador real, no es testeable con mocks)
-- `padron/templates/`: ~3% (misma razón)
+| catalogo.routes.test.ts | 45 |
+| padron.routes.test.ts | 14 |
+| permiso.routes.test.ts | 5 |
+| rol.routes.test.ts | 18 |
+| usuario.routes.test.ts | 14 |
 
 ### Patrones importantes
 
 ```typescript
-// Siempre resetear el mock en cada test
-import { mockReset } from 'vitest-mock-extended';
+// Resetear el mock en cada test
 beforeEach(() => { mockReset(mockPrisma); });
 
-// Usar UUIDs v4 reales en tests de integración (Zod v4 es estricto)
-const UUID_ESC = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+// Las funciones tokenX() en setup.ts configuran automáticamente el mock
+// de usuario.findFirst para el authMiddleware (mockResolvedValueOnce).
+// Los mocks de lógica de negocio van después y no interfieren.
+const token = tokenDirector();
+mockPrisma.turno.findMany.mockResolvedValue([...]);
+
+// Para testear estados inconsistentes entre token y BD,
+// usar jwt_sign_only() y configurar el mock manualmente:
+const token = jwt_sign_only(UUID_ROL_ADMIN, 'uuid-admin');
+mockPrisma.usuario.findFirst.mockResolvedValueOnce(null); // usuario desactivado
 ```
 
 ---
 
 ## Generación de PDF
 
-El padrón se genera con Puppeteer renderizando HTML/CSS a PDF formato Letter.
+El padrón se genera con Puppeteer renderizando HTML/CSS a PDF formato Tabloid landscape.
 
 ### Flujo
 
-1. `POST /api/director/padron/generar` con `{ idCiclo: "uuid" }`
+1. `POST /api/padron/generar` con `{ idCiclo, idEsc? }`
 2. `PadronService.obtenerDatos()` — carga escuela, ciclo, empleados, grupos y roles en paralelo
 3. Se construye el HTML concatenando las 7 hojas (más una hoja 3 por cada empleado)
 4. Puppeteer renderiza y genera el PDF
@@ -442,6 +529,7 @@ El padrón se genera con Puppeteer renderizando HTML/CSS a PDF formato Letter.
 |---|---|
 | `estilos.ts` | CSS compartido (tipografía, tablas, firmas) |
 | `encabezado.ts` | Header reutilizable con datos de escuela y ciclo |
+| `pie.ts` | Pie de firmas reutilizable |
 | `tipos.ts` | Types Prisma con includes para el padrón |
 | `hoja1.ts` | Portada |
 | `hoja2.ts` | Estadística de inicio de ciclo (Tablas A, B, C) |
@@ -475,3 +563,4 @@ Los schemas se generan automáticamente desde las definiciones Zod de cada módu
 - **TypeScript 6** — `req.params.id` requiere cast explícito: `req.params.id as string`.
 - **JWT sign** — usar `SignOptions` tipado para evitar errores con `expiresIn`.
 - **`$transaction`** — usado en creación de empleados y plazas para atomicidad.
+- **Cache de permisos** — cargado al arrancar el servidor via `cargarPermisos()`. Se recarga automáticamente al crear, editar o eliminar roles y permisos. También disponible manualmente via `POST /api/roles/recargar`.
