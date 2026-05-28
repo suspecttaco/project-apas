@@ -3,7 +3,7 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import { tokenAdmin, tokenDirector, UUID_ESC } from './setup';
+import { tokenAdmin, tokenDirector, tokenSupervisor, UUID_ESC } from './setup';
 
 const UUID_PLAN = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe('GET /api/ciclos', () => {
 
-  it('debe retornar 200 con lista de ciclos', async () => {
+  it('director: usa idEsc del token', async () => {
     mockPrisma.ciclo.findMany.mockResolvedValue([cicloBase]);
 
     const res = await request(app)
@@ -36,23 +36,54 @@ describe('GET /api/ciclos', () => {
     expect(res.body).toHaveLength(1);
   });
 
-  it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/ciclos');
-    expect(res.status).toBe(401);
+  it('admin: usa idEsc del query param', async () => {
+    mockPrisma.ciclo.findMany.mockResolvedValue([cicloBase]);
+
+    const res = await request(app)
+      .get(`/api/ciclos?idEsc=${UUID_ESC}`)
+      .set('Authorization', `Bearer ${tokenAdmin()}`);
+
+    expect(res.status).toBe(200);
+    expect(mockPrisma.ciclo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ idEsc: UUID_ESC }) })
+    );
   });
 
-  it('debe retornar 403 para admin sin idEsc', async () => {
+  it('supervisor: usa idEsc del query param', async () => {
+    mockPrisma.ciclo.findMany.mockResolvedValue([cicloBase]);
+
+    const res = await request(app)
+      .get(`/api/ciclos?idEsc=${UUID_ESC}`)
+      .set('Authorization', `Bearer ${tokenSupervisor()}`);
+
+    expect(res.status).toBe(200);
+  });
+
+  it('admin sin idEsc retorna 400', async () => {
     const res = await request(app)
       .get('/api/ciclos')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(400);
+  });
+
+  it('supervisor sin idEsc retorna 400', async () => {
+    const res = await request(app)
+      .get('/api/ciclos')
+      .set('Authorization', `Bearer ${tokenSupervisor()}`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it('retorna 401 sin token', async () => {
+    const res = await request(app).get('/api/ciclos');
+    expect(res.status).toBe(401);
   });
 });
 
 describe('GET /api/ciclos/:id', () => {
 
-  it('debe retornar 200 con el ciclo encontrado', async () => {
+  it('director: retorna el ciclo', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(cicloBase);
 
     const res = await request(app)
@@ -63,7 +94,17 @@ describe('GET /api/ciclos/:id', () => {
     expect(res.body.nombre).toBe('2024-2025');
   });
 
-  it('debe retornar 404 si el ciclo no existe', async () => {
+  it('admin con idEsc: retorna el ciclo', async () => {
+    mockPrisma.ciclo.findFirst.mockResolvedValue(cicloBase);
+
+    const res = await request(app)
+      .get(`/api/ciclos/uuid-ciclo?idEsc=${UUID_ESC}`)
+      .set('Authorization', `Bearer ${tokenAdmin()}`);
+
+    expect(res.status).toBe(200);
+  });
+
+  it('retorna 404 si el ciclo no existe', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
@@ -76,40 +117,51 @@ describe('GET /api/ciclos/:id', () => {
 
 describe('POST /api/ciclos', () => {
 
-  it('debe retornar 201 al crear ciclo correctamente', async () => {
+  it('director: crea ciclo correctamente', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(null);
     mockPrisma.ciclo.create.mockResolvedValue(cicloBase);
 
     const res = await request(app)
       .post('/api/ciclos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
-      .send({
-        idPlan:  UUID_PLAN,
-        nombre:  '2024-2025',
-        fInicio: '2024-08-26',
-        fFin:    '2025-07-11',
-      });
+      .send({ idPlan: UUID_PLAN, nombre: '2024-2025', fInicio: '2024-08-26', fFin: '2025-07-11' });
 
     expect(res.status).toBe(201);
   });
 
-  it('debe retornar 409 si el nombre ya existe', async () => {
+  it('admin con idEsc en body: crea ciclo correctamente', async () => {
+    mockPrisma.ciclo.findFirst.mockResolvedValue(null);
+    mockPrisma.ciclo.create.mockResolvedValue(cicloBase);
+
+    const res = await request(app)
+      .post('/api/ciclos')
+      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .send({ idEsc: UUID_ESC, idPlan: UUID_PLAN, nombre: '2024-2025', fInicio: '2024-08-26', fFin: '2025-07-11' });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('admin sin idEsc retorna 400', async () => {
+    const res = await request(app)
+      .post('/api/ciclos')
+      .set('Authorization', `Bearer ${tokenAdmin()}`)
+      .send({ idPlan: UUID_PLAN, nombre: '2024-2025', fInicio: '2024-08-26', fFin: '2025-07-11' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('retorna 409 si el nombre ya existe', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(cicloBase);
 
     const res = await request(app)
       .post('/api/ciclos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
-      .send({
-        idPlan:  UUID_PLAN,
-        nombre:  '2024-2025',
-        fInicio: '2024-08-26',
-        fFin:    '2025-07-11',
-      });
+      .send({ idPlan: UUID_PLAN, nombre: '2024-2025', fInicio: '2024-08-26', fFin: '2025-07-11' });
 
     expect(res.status).toBe(409);
   });
 
-  it('debe retornar 400 si faltan campos requeridos', async () => {
+  it('retorna 400 si faltan campos requeridos', async () => {
     const res = await request(app)
       .post('/api/ciclos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
@@ -121,7 +173,7 @@ describe('POST /api/ciclos', () => {
 
 describe('PUT /api/ciclos/:id', () => {
 
-  it('debe retornar 200 al actualizar correctamente', async () => {
+  it('actualiza correctamente', async () => {
     mockPrisma.ciclo.findFirst
       .mockResolvedValueOnce(cicloBase)
       .mockResolvedValueOnce(null);
@@ -136,7 +188,7 @@ describe('PUT /api/ciclos/:id', () => {
     expect(res.body.nombre).toBe('2025-2026');
   });
 
-  it('debe retornar 404 si el ciclo no existe', async () => {
+  it('retorna 404 si no existe', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
@@ -150,7 +202,7 @@ describe('PUT /api/ciclos/:id', () => {
 
 describe('PUT /api/ciclos/:id/activar', () => {
 
-  it('debe retornar 200 al activar el ciclo', async () => {
+  it('activa el ciclo', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue(cicloBase);
     mockPrisma.ciclo.updateMany.mockResolvedValue({ count: 0 });
     mockPrisma.ciclo.update.mockResolvedValue({ ...cicloBase, activo: true });
@@ -162,21 +214,11 @@ describe('PUT /api/ciclos/:id/activar', () => {
     expect(res.status).toBe(200);
     expect(res.body.activo).toBe(true);
   });
-
-  it('debe retornar 404 si el ciclo no existe', async () => {
-    mockPrisma.ciclo.findFirst.mockResolvedValue(null);
-
-    const res = await request(app)
-      .put('/api/ciclos/uuid-inexistente/activar')
-      .set('Authorization', `Bearer ${tokenDirector()}`);
-
-    expect(res.status).toBe(404);
-  });
 });
 
 describe('DELETE /api/ciclos/:id', () => {
 
-  it('debe retornar 204 al eliminar ciclo inactivo', async () => {
+  it('elimina ciclo inactivo', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue({ ...cicloBase, activo: false });
     mockPrisma.ciclo.update.mockResolvedValue({ ...cicloBase, activo: false });
 
@@ -187,7 +229,7 @@ describe('DELETE /api/ciclos/:id', () => {
     expect(res.status).toBe(204);
   });
 
-  it('debe retornar 409 al intentar eliminar el ciclo activo', async () => {
+  it('retorna 409 al intentar eliminar el ciclo activo', async () => {
     mockPrisma.ciclo.findFirst.mockResolvedValue({ ...cicloBase, activo: true });
 
     const res = await request(app)

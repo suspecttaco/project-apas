@@ -6,26 +6,26 @@ export class CoberturaController {
 
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(await CoberturaService.getAll(req.user.idEsc as string));
+      res.json(await CoberturaService.getAll(req.escuelaId));
     } catch (error) { next(error); }
   }
 
   static async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(await CoberturaService.getById(req.params.id as string, req.user.idEsc as string));
+      res.json(await CoberturaService.getById(req.params.id as string, req.escuelaId));
     } catch (error) { next(error); }
   }
 
   static async abrir(req: Request, res: Response, next: NextFunction) {
     try {
       const dto = CreateCoberturaSchema.parse(req.body);
-      res.status(201).json(await CoberturaService.abrir(dto, req.user.idEsc as string));
+      res.status(201).json(await CoberturaService.abrir(dto, req.escuelaId));
     } catch (error) { next(error); }
   }
 
   static async cerrar(req: Request, res: Response, next: NextFunction) {
     try {
-      res.json(await CoberturaService.cerrar(req.params.id as string, req.user.idEsc as string));
+      res.json(await CoberturaService.cerrar(req.params.id as string, req.escuelaId));
     } catch (error) { next(error); }
   }
 }

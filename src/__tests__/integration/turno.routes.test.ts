@@ -3,7 +3,7 @@ import request from 'supertest';
 import app from '../../app';
 import { mockPrisma } from '../mocks/prisma.mock';
 import { mockReset } from 'vitest-mock-extended';
-import { tokenAdmin, tokenDirector, UUID_ESC } from './setup';
+import { tokenAdmin, tokenDirector, tokenSupervisor, UUID_ESC } from './setup';
 
 const turnoBase = {
   id:      'uuid-turno',
@@ -23,7 +23,7 @@ beforeEach(() => {
 
 describe('GET /api/turnos', () => {
 
-  it('debe retornar 200 con lista de turnos', async () => {
+  it('director: usa idEsc del token', async () => {
     mockPrisma.turno.findMany.mockResolvedValue([turnoBase]);
 
     const res = await request(app)
@@ -34,23 +34,33 @@ describe('GET /api/turnos', () => {
     expect(res.body).toHaveLength(1);
   });
 
-  it('debe retornar 401 sin token', async () => {
-    const res = await request(app).get('/api/turnos');
-    expect(res.status).toBe(401);
+  it('admin con idEsc: lista turnos', async () => {
+    mockPrisma.turno.findMany.mockResolvedValue([turnoBase]);
+
+    const res = await request(app)
+      .get(`/api/turnos?idEsc=${UUID_ESC}`)
+      .set('Authorization', `Bearer ${tokenAdmin()}`);
+
+    expect(res.status).toBe(200);
   });
 
-  it('debe retornar 403 para admin sin idEsc', async () => {
+  it('admin sin idEsc retorna 400', async () => {
     const res = await request(app)
       .get('/api/turnos')
       .set('Authorization', `Bearer ${tokenAdmin()}`);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(400);
+  });
+
+  it('retorna 401 sin token', async () => {
+    const res = await request(app).get('/api/turnos');
+    expect(res.status).toBe(401);
   });
 });
 
 describe('GET /api/turnos/:id', () => {
 
-  it('debe retornar 200 con el turno encontrado', async () => {
+  it('retorna el turno encontrado', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
 
     const res = await request(app)
@@ -61,7 +71,7 @@ describe('GET /api/turnos/:id', () => {
     expect(res.body.nombre).toBe('Matutino');
   });
 
-  it('debe retornar 404 si el turno no existe', async () => {
+  it('retorna 404 si no existe', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
@@ -74,7 +84,7 @@ describe('GET /api/turnos/:id', () => {
 
 describe('POST /api/turnos', () => {
 
-  it('debe retornar 201 al crear turno correctamente', async () => {
+  it('crea turno correctamente', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
     mockPrisma.turno.create.mockResolvedValue(turnoBase);
 
@@ -87,7 +97,7 @@ describe('POST /api/turnos', () => {
     expect(res.body.nombre).toBe('Matutino');
   });
 
-  it('debe retornar 409 si el nombre ya existe', async () => {
+  it('retorna 409 si el nombre ya existe', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
 
     const res = await request(app)
@@ -98,7 +108,7 @@ describe('POST /api/turnos', () => {
     expect(res.status).toBe(409);
   });
 
-  it('debe retornar 400 si faltan campos requeridos', async () => {
+  it('retorna 400 si faltan campos requeridos', async () => {
     const res = await request(app)
       .post('/api/turnos')
       .set('Authorization', `Bearer ${tokenDirector()}`)
@@ -110,7 +120,7 @@ describe('POST /api/turnos', () => {
 
 describe('PUT /api/turnos/:id', () => {
 
-  it('debe retornar 200 al actualizar correctamente', async () => {
+  it('actualiza correctamente', async () => {
     mockPrisma.turno.findFirst
       .mockResolvedValueOnce(turnoBase)
       .mockResolvedValueOnce(null);
@@ -125,7 +135,7 @@ describe('PUT /api/turnos/:id', () => {
     expect(res.body.hFin).toBe('14:00');
   });
 
-  it('debe retornar 404 si el turno no existe', async () => {
+  it('retorna 404 si no existe', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
@@ -139,7 +149,7 @@ describe('PUT /api/turnos/:id', () => {
 
 describe('DELETE /api/turnos/:id', () => {
 
-  it('debe retornar 204 al eliminar correctamente', async () => {
+  it('elimina correctamente', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(turnoBase);
     mockPrisma.turno.update.mockResolvedValue({ ...turnoBase, activo: false });
 
@@ -150,7 +160,7 @@ describe('DELETE /api/turnos/:id', () => {
     expect(res.status).toBe(204);
   });
 
-  it('debe retornar 404 si el turno no existe', async () => {
+  it('retorna 404 si no existe', async () => {
     mockPrisma.turno.findFirst.mockResolvedValue(null);
 
     const res = await request(app)
