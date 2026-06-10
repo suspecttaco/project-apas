@@ -23,6 +23,19 @@ const includeCompleto = {
 export class EstadisticaService {
 
   static async getAll(idEsc: string) {
+    const cicloActivo = await db.ciclo.findFirst({ where: { idEsc, activo: true } });
+    if (cicloActivo) {
+      const grupos = await db.grupo.findMany({ where: { idEsc, activo: true } });
+      for (const grupo of grupos) {
+        const existe = await db.estadisticaAlumnos.findFirst({
+          where: { idCiclo: cicloActivo.id, idGrupo: grupo.id },
+        });
+        if (!existe) {
+          await db.estadisticaAlumnos.create({ data: { idCiclo: cicloActivo.id, idGrupo: grupo.id } });
+        }
+      }
+    }
+
     const stats = await db.estadisticaAlumnos.findMany({
       where:   { grupo: { idEsc, activo: true } },
       include: includeCompleto,

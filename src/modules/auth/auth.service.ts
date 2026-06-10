@@ -10,6 +10,15 @@ const jwtOptions: SignOptions = {
 
 export class AuthService {
 
+  static async me(id: string) {
+    const usuario = await db.usuario.findFirst({
+      where:   { id, activo: true },
+      include: { rol: true, escuela: true },
+    });
+    if (!usuario) throw new UnauthorizedError('Sesion invalida');
+    return usuario;
+  }
+
   static async login(dto: LoginSchema): Promise<string> {
     const usuario = await db.usuario.findFirst({
       where:   { correo: dto.correo, activo: true },

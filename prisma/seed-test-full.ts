@@ -216,9 +216,11 @@ async function main() {
   const nombMap       = Object.fromEntries(nombramientos.map(n => [n.nombre, n.id]));
   const materiaMap    = Object.fromEntries(materias.map(m => [m.nombre, m.id]));
 
-  // Rol de usuario director -- se busca desde BD sin hardcode
-  const rolUsuarioDirector = await db.rolUsuario.findFirst({ where: { nombre: 'director' } });
-  if (!rolUsuarioDirector) { console.error('Rol director no encontrado -- corre npm run seed primero'); process.exit(1); }
+  // Roles de usuario -- se buscan desde BD sin hardcode
+  const rolUsuarioDirector   = await db.rolUsuario.findFirst({ where: { nombre: 'director' } });
+  if (!rolUsuarioDirector)   { console.error('Rol director no encontrado -- corre npm run seed primero'); process.exit(1); }
+  const rolUsuarioSupervisor = await db.rolUsuario.findFirst({ where: { nombre: 'supervisor' } });
+  if (!rolUsuarioSupervisor) { console.error('Rol supervisor no encontrado -- corre npm run seed primero'); process.exit(1); }
 
   // Escuela
   let escuela = await db.escuela.findFirst({ where: { clave: ESCUELA_CLAVE } });
@@ -243,7 +245,7 @@ async function main() {
     console.log(`Escuela ya existe: ${escuela.nombre}`);
   }
 
-  // Usuario director -- usando tabla usuarios con el rol director de BD
+  // Usuario director
   const directorCorreo = 'director@sec25.edu.mx';
   const directorExiste = await db.usuario.findFirst({ where: { correo: directorCorreo } });
   if (!directorExiste) {
@@ -258,6 +260,22 @@ async function main() {
       },
     });
     console.log(`Usuario director creado: ${directorCorreo}`);
+  }
+
+  // Usuario supervisor (sin escuela fija, la selecciona desde la UI)
+  const supervisorCorreo = 'supervisor@sepyc.gob.mx';
+  const supervisorExiste = await db.usuario.findFirst({ where: { correo: supervisorCorreo } });
+  if (!supervisorExiste) {
+    const hash = await bcrypt.hash('supervisor123', 12);
+    await db.usuario.create({
+      data: {
+        nombre: 'Ana Patricia Lomeli Valenzuela',
+        correo: supervisorCorreo,
+        contra: hash,
+        idRol:  rolUsuarioSupervisor.id,
+      },
+    });
+    console.log(`Usuario supervisor creado: ${supervisorCorreo}`);
   }
 
   // Ciclo

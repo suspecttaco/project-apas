@@ -43,9 +43,37 @@ export type CicloConPlan = Prisma.CicloGetPayload<{
 export type RolSimple = Prisma.RolEmpleadoGetPayload<Record<string, never>>;
 
 export interface DatosPadron {
-  escuela:   EscuelaConTurnos;
-  ciclo:     CicloConPlan;
-  empleados: EmpleadoCompleto[];
-  grupos:    GrupoCompleto[];
-  roles:     RolSimple[];
+  escuela:       EscuelaConTurnos;
+  ciclo:         CicloConPlan;
+  empleados:     EmpleadoCompleto[];
+  grupos:        GrupoCompleto[];
+  roles:         RolSimple[];
+  logoBase64?:   string;
+  observaciones?: string;
 }
+
+// Para reporte de maestros — plaza incluye datos de escuela
+export const empleadoReporteInclude = {
+  persona:    { include: { direccion: true, contacto: true } },
+  preparacion: true,
+  roles:      { where: { activo: true }, include: { rol: true } },
+  plazas:     {
+    where:   { activo: true },
+    include: {
+      nombramiento: true,
+      materia:      true,
+      escuela:      true,
+      grupos:       { include: { grupo: { include: { grado: true, turno: true } } } },
+    },
+  },
+  trabajoExterno: { where: { activo: true } },
+  horarioSlots:   {
+    where:   { activo: true },
+    include: {
+      grupo:   { include: { grado: true, turno: true, escuela: true } },
+      materia: true,
+    },
+  },
+} as const;
+
+export type EmpleadoReporte = Prisma.EmpleadoGetPayload<{ include: typeof empleadoReporteInclude }>;

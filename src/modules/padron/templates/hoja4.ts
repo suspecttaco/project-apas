@@ -2,7 +2,7 @@ import { DatosPadron } from './tipos';
 import { encabezado } from './encabezado';
 import { pie, fechaLugar } from './pie';
 
-export function hoja4({ escuela, ciclo, empleados, grupos }: DatosPadron): string {
+export function hoja4({ escuela, ciclo, empleados, grupos, logoBase64 }: DatosPadron): string {
   const grados = ciclo.plan.grados;
 
   const gruposPorGrado = grados.map(g => ({
@@ -47,7 +47,7 @@ export function hoja4({ escuela, ciclo, empleados, grupos }: DatosPadron): strin
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL')}
+      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64)}
       <div style="font-size:7px; text-align:right; margin-bottom:3px;">GRUPOS: ${gruposLabel}</div>
 
       <h3>DISTRIBUCIÓN DE ALUMNOS POR TURNO</h3>
@@ -127,7 +127,7 @@ export function hoja4({ escuela, ciclo, empleados, grupos }: DatosPadron): strin
           <td class="center">${p.horasDescarga  || ''}</td>
           <td class="center">${p.horasFortalec  || ''}</td>
           <td style="font-size:7px;">${p.funcDescarga}</td>
-          <td></td>
+          <td class="center">${(p.horasDescarga || 0) + (p.horasFortalec || 0) || ''}</td>
           <td></td>
           <td style="font-size:7px;">${p.obs}</td>
         </tr>`).join('')}

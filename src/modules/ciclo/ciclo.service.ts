@@ -4,15 +4,18 @@ import { CreateCicloDTO, UpdateCicloDTO } from './ciclo.schema';
 
 export class CicloService {
 
+  private static readonly inc = { plan: true };
+
   static async getAll(idEsc: string) {
     return db.ciclo.findMany({
-      where:   whereEsc(idEsc),
+      where:   { idEsc },
+      include: CicloService.inc,
       orderBy: { fInicio: 'desc' },
     });
   }
 
   static async getById(id: string, idEsc: string) {
-    const ciclo = await db.ciclo.findFirst({ where: { id, ...whereEsc(idEsc) } });
+    const ciclo = await db.ciclo.findFirst({ where: { id, idEsc }, include: CicloService.inc });
     if (!ciclo) throw new NotFoundError('Ciclo');
     return ciclo;
   }
@@ -23,7 +26,7 @@ export class CicloService {
     });
     if (existe) throw new ConflictError('Ya existe un ciclo con ese nombre en esta escuela');
 
-    return db.ciclo.create({ data: { ...dto, idEsc, activo: false } });
+    return db.ciclo.create({ data: { ...dto, idEsc, activo: false }, include: CicloService.inc });
   }
 
   static async update(id: string, dto: UpdateCicloDTO, idEsc: string) {
@@ -36,7 +39,7 @@ export class CicloService {
       if (existe) throw new ConflictError('Ya existe un ciclo con ese nombre en esta escuela');
     }
 
-    return db.ciclo.update({ where: { id }, data: dto });
+    return db.ciclo.update({ where: { id }, data: dto, include: CicloService.inc });
   }
 
   static async softDelete(id: string, idEsc: string) {
@@ -48,6 +51,6 @@ export class CicloService {
   static async activar(id: string, idEsc: string) {
     await CicloService.getById(id, idEsc);
     await db.ciclo.updateMany({ where: { idEsc, activo: true }, data: { activo: false } });
-    return db.ciclo.update({ where: { id }, data: { activo: true } });
+    return db.ciclo.update({ where: { id }, data: { activo: true }, include: CicloService.inc });
   }
 }

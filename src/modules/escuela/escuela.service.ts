@@ -15,16 +15,9 @@ export class EscuelaService {
     const escuela = await db.escuela.findFirst({
       where:   { id, activo: true },
       include: {
-        // Trae los usuarios asignados a la escuela con su rol
         usuarios: {
           where:   { activo: true },
           include: { rol: true },
-          select: {
-            id:     true,
-            nombre: true,
-            correo: true,
-            rol:    true,
-          },
         },
       },
     });

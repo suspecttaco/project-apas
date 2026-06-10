@@ -25,6 +25,7 @@ import padronRoutes       from './modules/padron/padron.routes';
 import usuarioRoutes      from './modules/usuario/usuario.routes';
 import permisoRoutes      from './modules/permiso/permiso.routes';
 import rolRoutes          from './modules/rol/rol.routes';
+import analyticsRoutes   from './modules/analytics/analytics.routes';
 
 const app = express();
 const origenes = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) ?? [];
@@ -65,6 +66,7 @@ app.use('/api/estadisticas', estadisticaRoutes);
 app.use('/api/padron',       padronRoutes);
 
 // Permisos
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/permisos', permisoRoutes);
 
 // Roles

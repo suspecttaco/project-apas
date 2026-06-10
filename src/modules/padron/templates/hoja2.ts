@@ -2,7 +2,7 @@ import { DatosPadron } from './tipos';
 import { encabezado } from './encabezado';
 import { pie, fechaLugar } from './pie';
 
-export function hoja2({ escuela, ciclo, empleados, grupos, roles }: DatosPadron): string {
+export function hoja2({ escuela, ciclo, empleados, grupos, roles, logoBase64, observaciones }: DatosPadron): string {
 
   //  Tabla A - Existencia de Recursos Humanos 
   const rolesConConteo = roles.map(rol => ({
@@ -70,7 +70,7 @@ export function hoja2({ escuela, ciclo, empleados, grupos, roles }: DatosPadron)
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTADÍSTICA DE INICIO DE CICLO ESCOLAR')}
+      ${encabezado(escuela, ciclo, 'ESTADÍSTICA DE INICIO DE CICLO ESCOLAR', logoBase64)}
 
       <h3>A) EXISTENCIA DE RECURSOS HUMANOS</h3>
       <table>
@@ -159,7 +159,15 @@ export function hoja2({ escuela, ciclo, empleados, grupos, roles }: DatosPadron)
       </table>
       <p class="nota">* Serán considerados repetidores aquellos alumnos que tengan 5 o más materias reprobadas.</p>
 
-      
+      ${observaciones ? `
+      <div style="margin-top:6px; border:1px solid #000; padding:4px 8px;">
+        <strong style="font-size:10px;">OBSERVACIONES:</strong>
+        <p style="font-size:10px; margin-top:4px; white-space:pre-wrap;">${observaciones}</p>
+      </div>` : `
+      <div style="margin-top:6px; border:1px solid #000; padding:4px 8px; min-height:18mm;">
+        <strong style="font-size:10px;">OBSERVACIONES:</strong>
+      </div>`}
+
       ${pie(['NOMBRE Y FIRMA DEL DIRECTOR DE LA ESCUELA'], fechaLugar(escuela.localidad ?? '', escuela.municipio ?? '', escuela.estado ?? ''))}
     </div>
   `;

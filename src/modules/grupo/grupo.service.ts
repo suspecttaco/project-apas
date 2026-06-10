@@ -2,17 +2,20 @@ import { db, whereEsc } from '../../lib/db';
 import { NotFoundError, ConflictError } from '../../lib/errors';
 import { CreateGrupoDTO, UpdateGrupoDTO } from './grupo.schema';
 
+const inc = { grado: true, turno: true };
+
 export class GrupoService {
 
   static async getAll(idEsc: string) {
     return db.grupo.findMany({
       where:   whereEsc(idEsc),
+      include: inc,
       orderBy: [{ idGrado: 'asc' }, { nombre: 'asc' }],
     });
   }
 
   static async getById(id: string, idEsc: string) {
-    const grupo = await db.grupo.findFirst({ where: { id, ...whereEsc(idEsc) } });
+    const grupo = await db.grupo.findFirst({ where: { id, ...whereEsc(idEsc) }, include: inc });
     if (!grupo) throw new NotFoundError('Grupo');
     return grupo;
   }
@@ -24,7 +27,7 @@ export class GrupoService {
     if (existe) throw new ConflictError('Ya existe un grupo con ese nombre para ese grado y turno');
 
     return db.$transaction(async (tx) => {
-      const grupo = await tx.grupo.create({ data: { ...dto, idEsc } });
+      const grupo = await tx.grupo.create({ data: { ...dto, idEsc }, include: inc });
 
       const cicloActivo = await tx.ciclo.findFirst({ where: { idEsc, activo: true } });
       if (cicloActivo) {
@@ -52,7 +55,7 @@ export class GrupoService {
       if (existe) throw new ConflictError('Ya existe un grupo con ese nombre para ese grado y turno');
     }
 
-    return db.grupo.update({ where: { id }, data: dto });
+    return db.grupo.update({ where: { id }, data: dto, include: inc });
   }
 
   static async softDelete(id: string, idEsc: string) {

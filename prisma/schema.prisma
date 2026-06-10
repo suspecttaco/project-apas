@@ -78,7 +78,7 @@ model Usuario {
 model Escuela {
   id           String   @id @default(uuid())
   nombre       String   @db.VarChar(100)
-  clave        String   @unique @db.VarChar(10)
+  clave        String   @unique @db.VarChar(15)
   zonaEscolar  String   @db.VarChar(5)
   nivel        String   @db.VarChar(20)
   numTel       String?  @db.VarChar(10)

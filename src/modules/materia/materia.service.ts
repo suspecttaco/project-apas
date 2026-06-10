@@ -4,21 +4,23 @@ import { CreateMateriaDTO, UpdateMateriaDTO } from './materia.schema';
 
 export class MateriaService {
 
+  private static readonly inc = { plan: true };
+
   static async getAll() {
     return db.materia.findMany({
       where:   { activo: true },
+      include: MateriaService.inc,
       orderBy: { nombre: 'asc' },
     });
   }
 
   static async getById(id: string) {
-    const materia = await db.materia.findFirst({ where: { id, activo: true } });
+    const materia = await db.materia.findFirst({ where: { id, activo: true }, include: MateriaService.inc });
     if (!materia) throw new NotFoundError('Materia');
     return materia;
   }
 
   static async create(dto: CreateMateriaDTO) {
-    // Verificar que el plan exista y no sea actual
     const plan = await db.planEstudios.findFirst({ where: { id: dto.idPlan, activo: true } });
     if (!plan) throw new NotFoundError('Plan de estudios');
     if (plan.actual) throw new ConflictError('No se pueden agregar materias al plan actual');
@@ -28,7 +30,7 @@ export class MateriaService {
     });
     if (existe) throw new ConflictError('Ya existe una materia con ese nombre en este plan');
 
-    return db.materia.create({ data: dto });
+    return db.materia.create({ data: dto, include: MateriaService.inc });
   }
 
   static async update(id: string, dto: UpdateMateriaDTO) {
@@ -41,8 +43,7 @@ export class MateriaService {
       if (existe) throw new ConflictError('Ya existe una materia con ese nombre en este plan');
     }
 
-    // Editar nombre permitido aunque el plan sea actual
-    return db.materia.update({ where: { id }, data: dto });
+    return db.materia.update({ where: { id }, data: dto, include: MateriaService.inc });
   }
 
   static async softDelete(id: string) {

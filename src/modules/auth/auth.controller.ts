@@ -11,4 +11,11 @@ export class AuthController {
       res.json({ token });
     } catch (error) { next(error); }
   }
+
+  static async me(req: Request, res: Response, next: NextFunction) {
+    try {
+      const usuario = await AuthService.me(req.user.id);
+      res.json(usuario);
+    } catch (error) { next(error); }
+  }
 }

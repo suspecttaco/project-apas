@@ -5,7 +5,7 @@ extendZodWithOpenApi(z);
 
 export const CreateEscuelaSchema = z.object({
   nombre:       z.string().max(100).openapi({ example: 'Secundaria General No. 1' }),
-  clave:        z.string().max(10).openapi({ example: 'SIN0001' }),
+  clave:        z.string().max(15).regex(/^\d{2}-[A-Z]{2,4}-\d{4}[A-Z]$/, 'Formato inválido. Ejemplo: 25-EES-0123B').openapi({ example: '25-EES-0123B' }),
   zonaEscolar:  z.string().max(5).openapi({ example: 'Z001' }),
   nivel:        z.string().max(20).openapi({ example: 'Secundaria' }),
   numTel:       z.string().max(10).optional().openapi({ example: '6681234567' }),

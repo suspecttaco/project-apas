@@ -7,7 +7,6 @@ export class CoberturaService {
   static async getAll(idEsc: string) {
     return db.cobertura.findMany({
       where: {
-        activo: true,
         titular: { idEsc },
       },
       include: {
@@ -79,7 +78,7 @@ export class CoberturaService {
 
     return db.cobertura.update({
       where: { id },
-      data:  { fFin: new Date() },
+      data:  { fFin: new Date(), activo: false },
       include: {
         titular:  { include: { persona: true } },
         suplente: { include: { persona: true } },
