@@ -16,7 +16,7 @@ beforeEach(() => {
 
 describe('PlanEstudiosService', () => {
   const planBase = {
-    id: 'uuid-plan', nombre: 'Plan 2017', desc: null,
+    id: 'uuid-plan', nombre: 'Plan 2017', desc: null, actual: false,
     activo: true, fCre: new Date(), fMod: new Date(),
   };
 

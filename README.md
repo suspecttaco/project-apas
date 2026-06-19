@@ -46,7 +46,7 @@ El PDF se genera en tiempo real con Puppeteer y se entrega como blob; no se alma
 | Runtime | Node.js ≥ 18 |
 | Lenguaje | TypeScript 6 |
 | Framework | Express 5 |
-| ORM | Prisma 6 (⚠️ NO usar v7) |
+| ORM | Prisma 6 ( NO usar v7) |
 | Base de datos | MySQL (Docker local / Aiven producción) |
 | Validación | Zod v4 + @asteasolutions/zod-to-openapi 8.5 |
 | PDF | Puppeteer 24 |

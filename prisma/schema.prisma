@@ -88,6 +88,7 @@ model Escuela {
   municipio    String?  @db.VarChar(50)
   estado       String?  @db.VarChar(50)
   codigoPostal String?  @db.VarChar(5)
+  logoUrl      String?  @db.VarChar(255)
   activo       Boolean  @default(true)
   fCre         DateTime @default(now())
   fMod         DateTime @updatedAt

@@ -35,7 +35,7 @@ function tablaGrupo(grupo: { nombre: string; grado: { nombre: string }; turno: {
     </div>`;
 }
 
-export function hoja7({ escuela, ciclo, grupos, logoBase64 }: DatosPadron): string {
+export function hoja7({ escuela, ciclo, grupos, logoBase64, logoEscBase64 }: DatosPadron): string {
   const grados = ciclo.plan.grados;
   const gruposPorGrado = grados.map(g => ({
     nombre: g.nombre.replace(' Grado', ''),
@@ -73,7 +73,7 @@ export function hoja7({ escuela, ciclo, grupos, logoBase64 }: DatosPadron): stri
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64)}
+      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64, logoEscBase64)}
       <div style="font-size:7px; text-align:right; margin-bottom:3px;">GRUPOS: ${gruposLabel}</div>
 
       <h3>HORARIOS DE CADA GRUPO</h3>

@@ -40,4 +40,20 @@ export class EscuelaController {
       res.status(204).send();
     } catch (error) { next(error); }
   }
+
+  static async uploadLogo(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) { res.status(400).json({ message: 'No se recibió archivo' }); return; }
+      const logoUrl = `/uploads/logos/${req.file.filename}`;
+      const escuela = await EscuelaService.setLogo(req.params.id as string, logoUrl);
+      res.json(escuela);
+    } catch (error) { next(error); }
+  }
+
+  static async deleteLogo(req: Request, res: Response, next: NextFunction) {
+    try {
+      const escuela = await EscuelaService.clearLogo(req.params.id as string);
+      res.json(escuela);
+    } catch (error) { next(error); }
+  }
 }

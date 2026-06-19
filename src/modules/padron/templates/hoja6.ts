@@ -2,7 +2,7 @@ import { DatosPadron } from './tipos';
 import { encabezado } from './encabezado';
 import { pie, fechaLugar } from './pie';
 
-export function hoja6({ escuela, ciclo, empleados, grupos, logoBase64 }: DatosPadron): string {
+export function hoja6({ escuela, ciclo, empleados, grupos, logoBase64, logoEscBase64 }: DatosPadron): string {
   const grados   = ciclo.plan.grados;
   const materias = ciclo.plan.materias;
 
@@ -41,7 +41,7 @@ export function hoja6({ escuela, ciclo, empleados, grupos, logoBase64 }: DatosPa
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64)}
+      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64, logoEscBase64)}
       <div style="font-size:7px; text-align:right; margin-bottom:3px;">GRUPOS: ${gruposLabel}</div>
 
       <h3>PLAN DE ESTUDIOS — PROFESORES QUE ATIENDEN CADA GRUPO (NORMA ES-1)</h3>

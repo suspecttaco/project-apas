@@ -7,7 +7,7 @@ const diasSemana = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'] as cons
 const horaRegex  = /^\d{2}:\d{2}$/;
 
 export const CreateHorarioSlotSchema = z.object({
-  idGrupo:    z.string().uuid().openapi({ example: 'uuid-del-grupo' }),
+  idGrupo:    z.string().uuid().optional().openapi({ example: 'uuid-del-grupo' }),
   idMateria:  z.string().uuid().optional().openapi({ example: 'uuid-de-la-materia' }),
   idEmpleado: z.string().uuid().optional().openapi({ example: 'uuid-del-empleado' }),
   diaSemana:  z.enum(diasSemana).openapi({ example: 'Lunes' }),
@@ -28,5 +28,12 @@ export const HorarioSlotResponseSchema = z.object({
   fMod:       z.date(),
 }).openapi('HorarioSlotResponse');
 
+export const UpdateHorarioSlotSchema = z.object({
+  idGrupo:   z.string().uuid().optional().nullable(),
+  idEmpleado: z.string().uuid().optional().nullable(),
+  idMateria:  z.string().uuid().optional().nullable(),
+}).openapi('UpdateHorarioSlot');
+
 export type CreateHorarioSlotDTO   = z.infer<typeof CreateHorarioSlotSchema>;
+export type UpdateHorarioSlotDTO   = z.infer<typeof UpdateHorarioSlotSchema>;
 export type HorarioSlotResponseDTO = z.infer<typeof HorarioSlotResponseSchema>;

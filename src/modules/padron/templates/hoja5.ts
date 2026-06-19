@@ -3,7 +3,7 @@ import { encabezado } from './encabezado';
 import { pie, fechaLugar } from './pie';
 
 // Hoja 5 — misma tabla de personal que hoja 4 pero sin distribución de alumnos
-export function hoja5({ escuela, ciclo, empleados, grupos, logoBase64 }: DatosPadron): string {
+export function hoja5({ escuela, ciclo, empleados, grupos, logoBase64, logoEscBase64 }: DatosPadron): string {
   const grados = ciclo.plan.grados;
   const gruposPorGrado = grados.map(g => ({
     nombre: g.nombre.replace(' Grado', ''),
@@ -24,7 +24,7 @@ export function hoja5({ escuela, ciclo, empleados, grupos, logoBase64 }: DatosPa
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64)}
+      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DE PERSONAL', logoBase64, logoEscBase64)}
       <div style="font-size:7px; text-align:right; margin-bottom:3px;">GRUPOS: ${gruposLabel}</div>
 
       <table>

@@ -12,7 +12,13 @@ export class EmpleadoService {
 
   static async getAll(idEsc: string) {
     return db.empleado.findMany({
-      where:   whereEsc(idEsc),
+      where: {
+        activo: true,
+        OR: [
+          { idEsc },
+          { plazas: { some: { idEsc, activo: true } } },
+        ],
+      },
       include: includeCompleto,
       orderBy: { numControl: 'asc' },
     });

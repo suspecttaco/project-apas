@@ -1,8 +1,14 @@
 import { DatosPadron } from './tipos';
 
-export function hoja1({ escuela, ciclo }: DatosPadron): string {
-  const hoy = new Date();
+export function hoja1({ escuela, ciclo, logoBase64, logoEscBase64 }: DatosPadron): string {
+  const hoy    = new Date();
   const lugFec = `${escuela.localidad ?? escuela.municipio ?? ''}, ${escuela.municipio ?? ''}, ${escuela.estado ?? ''}, a ${hoy.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+
+  const logosHtml = (logoEscBase64 || logoBase64) ? `
+    <div style="display:flex; align-items:center; justify-content:center; gap:40px; margin-bottom:8px;">
+      ${logoEscBase64 ? `<img src="${logoEscBase64}" style="width:110px; height:110px; object-fit:contain;" />` : '<div style="width:110px;"></div>'}
+      ${logoBase64    ? `<img src="${logoBase64}"    style="width:110px; height:110px; object-fit:contain;" />` : '<div style="width:110px;"></div>'}
+    </div>` : '';
 
   return `
     <div class="pagina" style="padding-bottom: 0; height: 279mm; overflow: hidden;">
@@ -13,8 +19,9 @@ export function hoja1({ escuela, ciclo }: DatosPadron): string {
         justify-content: center;
         height: 240mm;
         text-align: center;
-        gap: 16px;
+        gap: 14px;
       ">
+        ${logosHtml}
         <div style="font-size:18px; font-weight:bold; line-height:1.7;">
           Secretaría de Educación Pública y Cultura<br>
           Subsecretaría de Educación Básica<br>

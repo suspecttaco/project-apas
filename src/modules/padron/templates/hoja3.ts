@@ -4,7 +4,7 @@ import { pie, fechaLugar } from './pie';
 
 const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'] as const;
 
-export function hoja3(emp: EmpleadoCompleto, escuela: EscuelaConTurnos, ciclo: CicloConPlan, logoBase64?: string): string {
+export function hoja3(emp: EmpleadoCompleto, escuela: EscuelaConTurnos, ciclo: CicloConPlan, logoBase64?: string, logoEscBase64?: string): string {
   const { persona, preparacion, plazas, trabajoExterno, horarioSlots } = emp;
   const nombreCompleto = `${persona.appP} ${persona.appM ?? ''} ${persona.nombre}`.trim();
   const dir = persona.direccion;
@@ -46,7 +46,7 @@ export function hoja3(emp: EmpleadoCompleto, escuela: EscuelaConTurnos, ciclo: C
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DEL PERSONAL', logoBase64)}
+      ${encabezado(escuela, ciclo, 'ESTRUCTURA OCUPACIONAL DEL PERSONAL', logoBase64, logoEscBase64)}
 
       <h3>A) DATOS PERSONALES</h3>
       <table>

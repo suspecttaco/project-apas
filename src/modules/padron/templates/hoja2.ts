@@ -2,7 +2,7 @@ import { DatosPadron } from './tipos';
 import { encabezado } from './encabezado';
 import { pie, fechaLugar } from './pie';
 
-export function hoja2({ escuela, ciclo, empleados, grupos, roles, logoBase64, observaciones }: DatosPadron): string {
+export function hoja2({ escuela, ciclo, empleados, grupos, roles, logoBase64, logoEscBase64, observaciones }: DatosPadron): string {
 
   //  Tabla A - Existencia de Recursos Humanos 
   const rolesConConteo = roles.map(rol => ({
@@ -70,7 +70,7 @@ export function hoja2({ escuela, ciclo, empleados, grupos, roles, logoBase64, ob
 
   return `
     <div class="pagina">
-      ${encabezado(escuela, ciclo, 'ESTADÍSTICA DE INICIO DE CICLO ESCOLAR', logoBase64)}
+      ${encabezado(escuela, ciclo, 'ESTADÍSTICA DE INICIO DE CICLO ESCOLAR', logoBase64, logoEscBase64)}
 
       <h3>A) EXISTENCIA DE RECURSOS HUMANOS</h3>
       <table>

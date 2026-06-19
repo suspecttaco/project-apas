@@ -26,6 +26,22 @@ function cargarLogo(): string | undefined {
   return undefined;
 }
 
+function cargarLogoEsc(logoUrl: string | null | undefined): string | undefined {
+  if (!logoUrl) return undefined;
+  try {
+    const filePath = path.join(process.cwd(), logoUrl.replace(/^\//, ''));
+    if (fs.existsSync(filePath)) {
+      const buf = fs.readFileSync(filePath);
+      const ext = path.extname(filePath).slice(1).toLowerCase();
+      const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg'
+                 : ext === 'webp' ? 'image/webp'
+                 : 'image/png';
+      return `data:${mime};base64,${buf.toString('base64')}`;
+    }
+  } catch {}
+  return undefined;
+}
+
 async function renderPdf(html: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
     headless: true,
@@ -113,10 +129,13 @@ export class PadronService {
   }
 
   static async generar(idEsc: string, idCiclo: string, observaciones?: string): Promise<Buffer> {
-    const logoBase64 = cargarLogo();
+    const logoBase64    = cargarLogo();
+    const datosBase     = await PadronService.obtenerDatos(idEsc, idCiclo);
+    const logoEscBase64 = cargarLogoEsc(datosBase.escuela.logoUrl);
     const datos: DatosPadron = {
-      ...(await PadronService.obtenerDatos(idEsc, idCiclo)),
+      ...datosBase,
       logoBase64,
+      logoEscBase64,
       observaciones,
     };
 
@@ -125,7 +144,7 @@ export class PadronService {
     const secciones = [
       hoja1(datos),
       hoja2(datos),
-      ...datos.empleados.map(emp => hoja3(emp, datos.escuela, datos.ciclo, logoBase64)),
+      ...datos.empleados.map(emp => hoja3(emp, datos.escuela, datos.ciclo, logoBase64, logoEscBase64)),
       hoja4(datos),
       hoja5(datos),
       hoja6(datos),
@@ -140,7 +159,9 @@ export class PadronService {
     idEmpleados: string[] | 'todos',
     observaciones?: string,
   ): Promise<Buffer> {
-    const logoBase64 = cargarLogo();
+    const logoBase64    = cargarLogo();
+    const escuela       = await db.escuela.findFirst({ where: { id: idEsc } });
+    const logoEscBase64 = cargarLogoEsc(escuela?.logoUrl);
 
     const where = idEmpleados === 'todos'
       ? { idEsc, activo: true }
@@ -164,17 +185,19 @@ export class PadronService {
 
     if (empleados.length === 0) throw new NotFoundError('Empleados');
 
-    const secciones = empleados.map(emp => paginaReporteMaestro(emp as any, logoBase64));
+    const secciones = empleados.map(emp => paginaReporteMaestro(emp as any, logoBase64, logoEscBase64));
 
     // Portada del reporte
     const hoy = new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
-    const logoHtml = logoBase64
-      ? `<img src="${logoBase64}" style="width:220px; height:220px; object-fit:contain;" />`
-      : `<div style="font-size:24px; font-weight:bold;">SEPyC</div>`;
+    const logosHtml = (logoEscBase64 || logoBase64) ? `
+      <div style="display:flex; align-items:center; justify-content:center; gap:40px;">
+        ${logoEscBase64 ? `<img src="${logoEscBase64}" style="width:160px; height:160px; object-fit:contain;" />` : '<div style="width:160px;"></div>'}
+        ${logoBase64    ? `<img src="${logoBase64}"    style="width:160px; height:160px; object-fit:contain;" />` : ''}
+      </div>` : `<div style="font-size:24px; font-weight:bold;">SEPyC</div>`;
 
     const portada = `
       <div class="pagina" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:20px;">
-        ${logoHtml}
+        ${logosHtml}
         <div style="font-size:16px; font-weight:bold; line-height:1.8;">
           Secretaría de Educación Pública y Cultura<br>
           Subsecretaría de Educación Básica

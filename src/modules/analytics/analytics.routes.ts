@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { requirePermission } from '../../lib/rbac';
-import { AnalyticsService, getLogoBase64 } from './analytics.service';
+import { AnalyticsService, getLogoBase64, getLogoEscBase64 } from './analytics.service';
 
 const router = Router();
 
@@ -25,6 +25,18 @@ router.get('/logo',
   (_req: Request, res: Response) => {
     const logo = getLogoBase64();
     res.json({ logo });
+  },
+);
+
+// GET /api/analytics/logo-esc — logo de la escuela activa como data-URL base64
+router.get('/logo-esc',
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const idEsc = (req.query.idEsc as string | undefined) ?? req.user.idEsc ?? undefined;
+      const logo  = idEsc ? await getLogoEscBase64(idEsc) : null;
+      res.json({ logo });
+    } catch (err) { next(err); }
   },
 );
 

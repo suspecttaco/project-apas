@@ -4,7 +4,7 @@ import { pie } from './pie';
 
 const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'] as const;
 
-export function paginaReporteMaestro(emp: EmpleadoReporte, logoBase64?: string): string {
+export function paginaReporteMaestro(emp: EmpleadoReporte, logoBase64?: string, logoEscBase64?: string): string {
   const { persona, preparacion, plazas, trabajoExterno, horarioSlots } = emp;
   const nombreCompleto = `${persona.appP} ${persona.appM ?? ''} ${persona.nombre}`.trim();
   const dir = persona.direccion;
@@ -89,7 +89,7 @@ export function paginaReporteMaestro(emp: EmpleadoReporte, logoBase64?: string):
 
   return `
     <div class="pagina">
-      ${encabezadoReporte('REPORTE DE PERSONAL DOCENTE', logoBase64)}
+      ${encabezadoReporte('REPORTE DE PERSONAL DOCENTE', logoBase64, logoEscBase64)}
 
       <h3>A) DATOS PERSONALES</h3>
       <table>

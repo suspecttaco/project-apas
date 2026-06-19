@@ -18,6 +18,7 @@ const escuelaBase = {
   municipio:    null,
   estado:       null,
   codigoPostal: null,
+  logoUrl:      null,
   activo:       true,
   fCre:         new Date(),
   fMod:         new Date(),

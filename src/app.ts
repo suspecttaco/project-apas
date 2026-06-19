@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { generateOpenApiSpec } from './lib/openapi';
 import { errorMiddleware } from './middleware/error.middleware';
@@ -37,6 +38,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
+
+// Archivos subidos — imágenes de logo de escuelas
+app.use('/uploads', (_req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(process.cwd(), 'uploads')));
 
 const spec = generateOpenApiSpec();
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec));

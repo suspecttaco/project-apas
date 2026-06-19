@@ -43,13 +43,14 @@ export type CicloConPlan = Prisma.CicloGetPayload<{
 export type RolSimple = Prisma.RolEmpleadoGetPayload<Record<string, never>>;
 
 export interface DatosPadron {
-  escuela:       EscuelaConTurnos;
-  ciclo:         CicloConPlan;
-  empleados:     EmpleadoCompleto[];
-  grupos:        GrupoCompleto[];
-  roles:         RolSimple[];
-  logoBase64?:   string;
-  observaciones?: string;
+  escuela:         EscuelaConTurnos;
+  ciclo:           CicloConPlan;
+  empleados:       EmpleadoCompleto[];
+  grupos:          GrupoCompleto[];
+  roles:           RolSimple[];
+  logoBase64?:     string;   // SEPyC
+  logoEscBase64?:  string;   // Logo de la escuela
+  observaciones?:  string;
 }
 
 // Para reporte de maestros — plaza incluye datos de escuela

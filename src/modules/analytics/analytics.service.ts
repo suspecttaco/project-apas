@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { db } from '../../lib/db';
 
-const LOGO_PATH = path.join(__dirname, '../../assets/logosepyc.png');
+const LOGO_PATH = path.join(__dirname, '../../assets/sinaloa2.png');
 
 export function getLogoBase64(): string | null {
   try {
@@ -10,6 +10,19 @@ export function getLogoBase64(): string | null {
       return `data:image/png;base64,${fs.readFileSync(LOGO_PATH).toString('base64')}`;
     }
     return null;
+  } catch { return null; }
+}
+
+export async function getLogoEscBase64(idEsc: string): Promise<string | null> {
+  try {
+    const esc = await db.escuela.findFirst({ where: { id: idEsc }, select: { logoUrl: true } });
+    if (!esc?.logoUrl) return null;
+    const filePath = path.join(process.cwd(), esc.logoUrl.replace(/^\//, ''));
+    if (!fs.existsSync(filePath)) return null;
+    const buf  = fs.readFileSync(filePath);
+    const ext  = path.extname(filePath).slice(1).toLowerCase();
+    const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : ext === 'webp' ? 'image/webp' : 'image/png';
+    return `data:${mime};base64,${buf.toString('base64')}`;
   } catch { return null; }
 }
 
@@ -68,6 +81,7 @@ export class AnalyticsService {
         clave:      esc.clave,
         zonaEscolar: esc.zonaEscolar,
         municipio:  esc.municipio,
+        logoUrl:    esc.logoUrl ?? null,
         totalEmpleados,
         alumnos,
         docentesPorMateria,

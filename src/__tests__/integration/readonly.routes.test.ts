@@ -15,7 +15,7 @@ describe('GET /api/plan-estudios', () => {
 
   it('debe retornar 200 con lista de planes para director', async () => {
     mockPrisma.planEstudios.findMany.mockResolvedValue([{
-      id: 'uuid-plan', nombre: 'Plan 2017', desc: null,
+      id: 'uuid-plan', nombre: 'Plan 2017', desc: null, actual: false,
       activo: true, fCre: new Date(), fMod: new Date(),
     }]);
 

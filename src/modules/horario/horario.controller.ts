@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { HorarioService } from './horario.service';
-import { CreateHorarioSlotSchema } from './horario.schema';
+import { CreateHorarioSlotSchema, UpdateHorarioSlotSchema } from './horario.schema';
 
 export class HorarioController {
 
@@ -23,10 +23,23 @@ export class HorarioController {
     } catch (error) { next(error); }
   }
 
+  static async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const dto = UpdateHorarioSlotSchema.parse(req.body);
+      res.json(await HorarioService.update(req.params.id as string, dto, req.escuelaId));
+    } catch (error) { next(error); }
+  }
+
   static async remove(req: Request, res: Response, next: NextFunction) {
     try {
       await HorarioService.softDelete(req.params.id as string, req.escuelaId);
       res.status(204).send();
+    } catch (error) { next(error); }
+  }
+
+  static async getCompartidos(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json(await HorarioService.getCompartidos(req.escuelaId));
     } catch (error) { next(error); }
   }
 }
